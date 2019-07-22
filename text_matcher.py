@@ -58,15 +58,34 @@ class MatchCandidate:
         self.sent2_id = sent2_id
         self.match = match
 
-    def does_candidate_match(self, candidate):
-
 class History:
+    '''A History object is used to keep track of match candidates and help determine which candidates are
+         true matches and which candidates can be ruled out as potential matches. A history starts with a single
+         MatchCandidate object, but other candidates can be added to the history with the .add_candidate() method'''
     def __init__(self, match_candidate):
         self.candidates = [match_candidate]
 
+    def get_length(self):
+        ''' Output: An int, the number of match candidates in the list self.candidates '''
+        return len(self.candidates)
+
+    def is_next(self, candidate):
+        '''Input: candidate: a MatchCandidate instance
+           OUtput: a boolean: True if the sentence indices of candidate match with the history
+                              False if the sentence indices do not match'''
+        i = self.candidates[-1].sent1_id
+        j = self.candidates[-1].sent2_id
+        new_i = candidate.sent1_id
+        new_j = candidate.sent2_id
+        return (i + 1 == new_i and j + 1 == new_j)
+
+
     def flush_history(self, length):
+        '''  '''
 
     def add_candidate(self, candidate):
+        ''' Add candidate '''
+        self.candidates += [candidate]
 
     def rule_out_history(self, ):
         if  :
