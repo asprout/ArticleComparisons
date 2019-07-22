@@ -1,8 +1,10 @@
 import documents
 
 class SentenceMatcher:
-    ''' The SentenceMatcher
-
+    ''' The SentenceMatcher takes in two sentences (sentence1 and sentence2) which are each an
+        instance of the Sentence class, a cut-off value for the jaccard index (jaccard_threshold)
+        and the minimum sentence length (min_sentence_length) -- measured in words -- necessary
+        for each sentence in order for the two sentences to be considered a match.
     '''
     def __init__(self, sentence1, sentence2, jaccard_threshold, min_sentence_length):
         self.sentence1 = sentence1
@@ -40,12 +42,21 @@ class SentenceMatcher:
                 match = "Maybe"
         return match
 
+class MatchCandidate:
+    ''' A MatchCandidate object provides information on a potential sentence match. It takes in a sentence id
+            for each of the two sentences that make up the potential match (sent1_id, sent2_id),
+            as well as a "match" value describing the potential sentence match as "yes," "no," or "maybe."
+             For a description of the match values, see the is_match function in the SentenceMatcher class'''
+    def __init__(self, sent1_id, sent2_id, match):
+        self.sent1_id = sent1_id
+        self.sent2_id = sent2_id
+        self.match = match
 
 
 class History:
-    pass
+    def __init__(self, ):
 
 class DocumentMatcher:
-    def __init__(self, min_consec_candidates):
+    def __init__(self, document1, document2, min_consec_candidates):
 
 
