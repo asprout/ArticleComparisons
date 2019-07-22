@@ -52,8 +52,8 @@ class MatchCandidate:
             as well as a "match" value describing the potential sentence match as "yes," "no," or "maybe."
              For a description of the match values, see the is_match function in the SentenceMatcher class'''
     def __init__(self, sent1_id, sent2_id, match):
-        if not(match in ["No", "Maybe", "Yes"]):
-            raise TypeError('match must be type of is_match() output: "No", "Yes", or "Maybe".')
+        if not(match in [ "Maybe", "Yes"]):
+            raise TypeError('match must be type of is_match() output:  "Yes" or "Maybe".')
         self.sent1_id = sent1_id
         self.sent2_id = sent2_id
         self.match = match
@@ -101,15 +101,25 @@ class History:
 
 
 class DocumentMatcher:
+
     def __init__(self, target_document, source_document, min_consec_maybe):
-        self.target = document1.id_wordbags()
-        self.source = document2.id_wordbags()
+        self.target_doc = target_document
+        self.source_doc = source_document
         self.min_consec_candidates = min_consec_maybe
+        self.target_sentences = [Sentence(s) for s in target_document.sentences]
+        self.source_sentences = [Sentence(s) for s in target_document.sentences]
+        self.candidates = []
 
     def get_match_candidates(self, jaccard_threshold, min_sentence_length):
-        for sentence in self.target:
-            for sentence in self.source:
-                SentenceMatcher()
+        for i, target_s in enumerate(self.target_sentences):
+            for j,source_s in enumerate(self.source_sentences):
+                match = SentenceMatcher(target_s, source_s, jaccard_threshold, min_sentence_length)
+                match_value = match.ismatch()
+                if (match_value in ["Yes", "Maybe"]):   #check if sentences are possibly a match
+                    candidate = MatchCandidate(i, j, match_value)
+                    self.candidates += [candidate]         #if possible a match, add to candidates list
+
+
 
 
 
