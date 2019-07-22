@@ -30,7 +30,19 @@ class Document:
             Example: document text: "Hello! Today it is sunny. The sky is blue."
                     output: {0: 'Hello!', 1: 'Today it is sunny.', 2: 'The sky is blue.'} '''
         return {k:v for k,v in enumerate(self.sentences)}
-    
+
+    def id_wordbags(self):
+        ''' Create a dictionary where each key (type: int) is an index for the sentence location
+         in the document text and the value (type: dict) is a bag of words representation of the sentence.
+            Example: document text: "Hello! Today it is sunny."
+                    output: {0: {'hello':1}, 1: {'Today':1, 'it':1, 'is':1 'sunny':1}} '''
+
+        new_dict = self.id_sentences()
+        for k,v in new_dict.items():
+            new_dict[k] = Sentence(v).wordbag()
+        return new_dict
+
+
     def export_html(self):
         pass
 

@@ -48,15 +48,31 @@ class MatchCandidate:
             as well as a "match" value describing the potential sentence match as "yes," "no," or "maybe."
              For a description of the match values, see the is_match function in the SentenceMatcher class'''
     def __init__(self, sent1_id, sent2_id, match):
+        if not(match in ["No", "Maybe", "Yes"]):
+            raise TypeError('match must be type of is_match() output: "No", "Yes", or "Maybe".')
         self.sent1_id = sent1_id
         self.sent2_id = sent2_id
         self.match = match
 
+    def does_candidate_match(self, candidate):
 
 class History:
-    def __init__(self, ):
+    def __init__(self, match_candidate):
+        self.candidates = [match_candidate]
+
+    def flush_history(self, length):
+
+    def add_candidate(self, candidate):
+
+    def rule_out_history(self, ):
+        if  :
+            del self
+
 
 class DocumentMatcher:
     def __init__(self, document1, document2, min_consec_candidates):
+        self.document1 = document1.id_wordbags()
+        self.document2 = document2.id_wordbags()
+        self.min_consec_candidates = min_consec_candidates
 
 
