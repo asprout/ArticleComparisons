@@ -85,5 +85,6 @@ class Sentence:
         union = wordbag1_size + wordbag2_size - intsec
         return float(intsec / union)
 
+
     def export_html(self):
         pass
