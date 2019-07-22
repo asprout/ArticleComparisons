@@ -1,10 +1,14 @@
 import documents
 
 class SentenceMatcher:
-    ''' The SentenceMatcher takes in two sentences (sentence1 and sentence2) which are each an
-        instance of the Sentence class, a cut-off value for the jaccard index (jaccard_threshold)
-        and the minimum sentence length (min_sentence_length) -- measured in words -- necessary
-        for each sentence in order for the two sentences to be considered a match.
+    ''' The SentenceMatcher takes in:
+        sentence1: an instance of the Sentence class
+         sentence2: an instance of the Sentence class
+         jaccard_threshold (type: float): a cut-off value for the jaccard index, below which the two sentences will be
+                            considered definitely not a match and assigned a match value of "No"
+        min_sentence_length (type:int): the minimum sentence length  -- measured in words -- both sentence1
+                                and sentence2 must satisfy for the two sentences to be considered a "Yes" a match,
+                                GIVEN THAT the jaccard index is above jaccard_threshold.
     '''
     def __init__(self, sentence1, sentence2, jaccard_threshold, min_sentence_length):
         self.sentence1 = sentence1
@@ -22,7 +26,7 @@ class SentenceMatcher:
         intsec = 0  # start intersection counter at 0
         for word in self.wordbag1.keys():
             if word in self.wordbag2.keys():
-                intsec = intsec + min(wordbag1.get(word), wordbag2.get(word))
+                intsec = intsec + min(self.wordbag1.get(word), self.wordbag2.get(word))
         wordbag1_size = sum(self.wordbag1.values())
         wordbag2_size = sum(self.wordbag2.values())
         union = wordbag1_size + wordbag2_size - intsec
