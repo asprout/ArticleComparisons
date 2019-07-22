@@ -71,7 +71,7 @@ class History:
 
     def is_next(self, candidate):
         '''Input: candidate: a MatchCandidate instance
-           OUtput: a boolean: True if the sentence indices of candidate match with the history
+           Output: a boolean: True if the sentence indices of candidate match with the history
                               False if the sentence indices do not match'''
         i = self.candidates[-1].sent1_id
         j = self.candidates[-1].sent2_id
@@ -101,23 +101,35 @@ class History:
 
 
 class DocumentMatcher:
-
+''' The DocumentMatcher object is used to identify sentence matches between two documents
+        target_document: a Document object
+        source_document: a Document object
+        min_consec_maybe (type: int): The minimum number of consecutive candidates with a match value of "Maybe"
+                                        required to consider the sentences corresponding to the candidates as
+                                        sentence matches (or copies)'''
     def __init__(self, target_document, source_document, min_consec_maybe):
         self.target_doc = target_document
         self.source_doc = source_document
         self.min_consec_candidates = min_consec_maybe
         self.target_sentences = [Sentence(s) for s in target_document.sentences]
         self.source_sentences = [Sentence(s) for s in target_document.sentences]
-        self.candidates = []
+        self.candidates = []  #a list of the match candidates, starts as an empty list
 
     def get_match_candidates(self, jaccard_threshold, min_sentence_length):
+        ''' Inputs: jaccard_threshold (type: float): a cut-off value for the jaccard index, below which the
+                                                    two sentences will be considered definitely not a match
+                                                    and assigned a match value of "No"
+                     min_sentence_length (type: int): the minimum sentence length input from the is_match()
+                                                        method from the SentenceMatcher class
+        '''
         for i, target_s in enumerate(self.target_sentences):
             for j,source_s in enumerate(self.source_sentences):
                 match = SentenceMatcher(target_s, source_s, jaccard_threshold, min_sentence_length)
-                match_value = match.ismatch()
+                match_value = match.is_match()
                 if (match_value in ["Yes", "Maybe"]):   #check if sentences are possibly a match
                     candidate = MatchCandidate(i, j, match_value)
-                    self.candidates += [candidate]         #if possible a match, add to candidates list
+                    self.candidates += [candidate]         # if possible a match, add to candidates
+
 
 
 
