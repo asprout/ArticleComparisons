@@ -90,7 +90,6 @@ class History:
                         copied_sentences = history_matches
                         break
 
-
     def add_candidate(self, candidate):
         ''' Add candidate '''
         self.candidates += [candidate]
