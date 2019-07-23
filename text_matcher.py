@@ -21,6 +21,9 @@ class SentenceMatcher:
         self.sent2_length = sentence2.word_length
 
     def __str__(self):
+        representation = self.sentence1.__str__() + '\n' + \
+                         self.sentence2.__str__() + '\n'
+        return representation
 
 
     def jaccard_index(self):
@@ -104,8 +107,7 @@ class History:
                         matches = history.candidates
                         break
             return matches
-        else:
-            del self
+
 
     def add_candidate(self, candidate):
         ''' Add candidate '''
@@ -133,6 +135,15 @@ class DocumentMatcher:
         self.histories = [] # a list of History instances, starts as an empty list, updated during the find_matches method
         self.matches = [] # a list of all of the sentence matches, starts as an empty list, updated by the find_matches method
 
+    def __str__(self):
+        representation = 'Candidates:' + '\n' + \
+                         str(self.candidates) + '\n' + \
+                        'Histories:' + '\n' + \
+                         str([x.__str__() for x in self.histories]) + '\n' + \
+                         'Matches'  + '\n' + \
+                         str([x.__str__() for x in self.matches]) + '\n'
+        return representation
+
     def set_candidates(self):
         ''' Output: sets self.candidates attribute to be such that each value is a list of all of the sentence match
                 candidates in the document
@@ -155,7 +166,7 @@ class DocumentMatcher:
                 # a list of History instances that have no candidate match
                 unmatched_histories = []
                 for history in self.histories:
-                    if any(list(filter(lambda x: history.is_next(x), candidates))):
+                    if any(list(map(lambda x: history.is_next(x), candidates))):
                         matched_histories += [history]
                     else:
                         unmatched_histories += [history]
@@ -169,13 +180,15 @@ class DocumentMatcher:
                             pass
                 self.histories = matched_histories
                 # get max length of all histories (matching or unmatching)
-                max_length = max([len(h) for h in matched_histories + unmatched_histories])
+                max_length = max([len(h) for h in (matched_histories + unmatched_histories)])
                 # flush unmatching histories
-                self.matches += list(map(lambda x: x.flush(max_length), unmatched_histories))
+                for history in unmatched_histories:
+                    self.matches += history.flush(max_length)
 
          #flush all remaining histories
         max_length = max([len(h) for h in self.histories])
-        self.matches += list(map(lambda x: x.flush(max_length), self.histories))
+        for history in self.histories:
+            self.matches += history.flush(max_length)
 
 
 
