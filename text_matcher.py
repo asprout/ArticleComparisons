@@ -95,10 +95,6 @@ class History:
         ''' Add candidate '''
         self.candidates += [candidate]
 
-    def rule_out_history(self, length):
-        if self.length() < length:
-            del self
-
 
 class DocumentMatcher:
     ''' The DocumentMatcher object is used to identify sentence matches between two documents
@@ -118,7 +114,8 @@ class DocumentMatcher:
           # a dict where each key is the target sentences index and each value is a list of MatchCandidate instances,
           # starts as an empty list
         self.candidates = {k:[] for k,sent in enumerate(self.target_sentences)}
-        self.histories = [] # a list of History instances, starts as an empty list
+        self.histories = [] # a list of History instances, starts as an empty list, updated during the find_matches method
+        self.matches = [] # a list of all of the sentence matches, starts as an empty list, updated by the find_matches method
 
     def set_candidates(self):
         ''' Output: sets self.candidates attribute to be such that each value is a list of all of the sentence match
@@ -135,14 +132,24 @@ class DocumentMatcher:
     def find_matches(self):
         for candidates in self.candidates.values():
             if self.histories == []:
-
+                self.histories = [History(c) for c in candidates]
             else:
+                matching_histories = []
+                unmatching_histories = []
                 for history in self.histories:
-                    matching = list(filter(lambda x: history.is_next(x), candidates))
-                    unmatching = list(filter(lambda x: not(history.is_next(x)), candidates))
+                    if any(list(filter(lambda x: history.is_next(x), candidates))):
+                        matching_histories += [history]
+                    else:
+                        unmatching_histories += [history]
+                # add candidates to matching histories
 
-                 history.is_next(candidate):
-                    history.add_candidate(candidate)
+
+
+
+                    #rule_out unmatching / flush
+                    #add to matching
+
+
                     #add history to histories
 
 
