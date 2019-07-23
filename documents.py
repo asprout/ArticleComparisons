@@ -5,6 +5,7 @@
 
 ##########   IMPORT PACKAGES         #########
 
+import Config # get parameter class
 import string #remove punctuation
 from collections import Counter #contains word counter function
 import nltk #tokenize words and sentences based on language

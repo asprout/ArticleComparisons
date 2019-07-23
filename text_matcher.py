@@ -1,4 +1,5 @@
-import documents
+import documents #get document classes
+import Config # get parameter class
 
 class SentenceMatcher:
     ''' The SentenceMatcher takes in:
