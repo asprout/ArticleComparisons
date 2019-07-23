@@ -155,9 +155,9 @@ class DocumentMatcher:
                             break
                         else:
                             pass
-
+                self.histories = matching_histories
                 # get max length of all histories (matching or unmatching)
-                max_length = max([historty.length() for history in [matching_histories + unmatching_histories]])
+                max_length = max([history.length() for history in [matching_histories + unmatching_histories]])
                 # flush unmatching histories
                 self.matches += list(map(lambda x: x.flush(max_length), unmatching_histories))
 
