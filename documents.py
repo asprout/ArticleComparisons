@@ -1,102 +1,83 @@
+import string # remove punctuation
+import numpy as np 
+from collections import Counter # contains word counter function
+import nltk # tokenize words and sentences based on language
+# Following line may be necessary to run nltk calls:
+# nltk.download('punkt')
 
-'''
-
-'''
-
-##########   IMPORT PACKAGES         #########
-
-import config # get parameter class
-import string #remove punctuation
-from collections import Counter #contains word counter function
-import nltk #tokenize words and sentences based on language
-
-config = Config()
-###################################################
 class Document:
-    def __init__(self, file_name):
-        self.file_name = file_name
-        self.text_encoding = config.text_encoding
-        self.language = config.text_language
-        with open(self.file_name, 'r+', encoding=self.text_encoding) as text_file:
-            self.text = text_file.read()
-        self.paragraphs = self.text.split("\n")  # A list of document paragraphs
-        self.sentences = nltk.sent_tokenize(self.text, language=self.language) # A list of document sentences
-        self.sentence_length = len(self.sentences)
+    def __init__(self, text, text_encoding = "utf8", text_language = "english"):
+        self.text = text 
+        self.text_encoding = text_encoding
+        self.text_language = text_language
+        self.paragraphs = self.parse_paragraphs()
+        self.sentences = self.parse_sentences()
+        self.bow_sentences = self.parse_bow_sentences()
 
     def __str__(self):
         return self.text
 
-    def id_sentences(self):
-        ''' Create a dictionary where each key (type: int) is an index for the sentence location
-         in the document text and the value (type: string) is sentence text.
-            Example: document text: "Hello! Today it is sunny. The sky is blue."
-                    output: {0: 'Hello!', 1: 'Today it is sunny.', 2: 'The sky is blue.'} '''
-        return {k:v for k,v in enumerate(self.sentences)}
+    def parse_paragraphs(self, para_sep = "\n"):
+        return self.text.split(para_sep)
 
-    def id_wordbags(self):
-        ''' Create a dictionary where each key (type: int) is an index for the sentence location
-         in the document text and the value (type: dict) is a bag of words representation of the sentence.
-            Example: document text: "Hello! Today it is sunny."
-                    output: {0: {'hello':1}, 1: {'Today':1, 'it':1, 'is':1 'sunny':1}} '''
+    def parse_sentences(self):
+        sentences = []
+        for para in self.paragraphs:
+            sentences.extend(nltk.sent_tokenize(para, self.text_language))
+        return sentences
 
-        new_dict = self.id_sentences()
-        for k,v in new_dict.items():
-            new_dict[k] = Sentence(v).wordbag()
-        return new_dict
+    def parse_bow_sentences(self):
+        ''' Returns a list of dictionaries for each sentence, 
+        where the keys are words and values are counts of the words in 
+        the sentence 
+        '''
+        bow_sentences = []
+        for sent in self.sentences:
+            tokens = [token for token in nltk.word_tokenize(sent.lower()) 
+                                                        if token.isalnum()]
+            bow_sentences.append(tokens)
+        return [dict(Counter(tokens)) for tokens in bow_sentences]
 
-    def export_html(self):
-        pass
-
-
-class Paragraph:
-    def __init__(self, text_string):
-        self.text = text_string
-        self.encoding = config.text_encoding
-        self.language = config.text_language
-        self.sentences = nltk.sent_tokenize(self.text, language=self.language)
-
-    def __str__(self):
-        return self.text
-
-    def export_html(self):
-        pass
+    def get_bow_sentences(self):
+        return self.bow_sentences
 
 
-class Sentence:
-    def __init__(self, text_string):
-        self.text = text_string
-        self.encoding = config.text_encoding
-        self.language = config.text_language
-        self.words = nltk.word_tokenize(self.text.translate(str.maketrans('', '', string.punctuation)),
-                                        language=self.language) # A list of sentence words without punctuation
-        self.word_length = len(self.words)
+class DocumentComparisons:
+    def __init__(self, jaccard_threshold = .9, min_sentence = 4):
+        self.jaccard_threshold = .9
+        self.min_sentence = 4
 
-    def __str__(self):
-        return self.text
-
-    def wordbag(self):
-        ''' From the sentence text, create a dictionary where each key (type: str) is a unique word in the
-         sentence text and each value (type: int) is the number of times the key word appears in the sentence.
-            Example: for sentence: "The sky is blue, the sun is not blue."
-                    output: {'the':2, 'sky':1, 'is':2, 'blue': 2, 'sun':1, 'not':1} '''
-        sentence = self.text.lower() # make all words lowercase
-        sentence = sentence.translate(str.maketrans('', '', string.punctuation)) # remove punctuation
-        return dict(Counter(nltk.word_tokenize(sentence, language=self.language)))
-
-    def jaccard_index(self, sentence):
-        ''' Input: sentence (type: Sentence class), the sentence to compare
-            Output: The Jaccard similarity value (type: float) between the word bags of each sentence
-                        https://en.wikipedia.org/wiki/Jaccard_index '''
-        intsec = 0  # start intersection counter at 0
-        wordbag1 = self.wordbag()
-        wordbag2 = sentence.wordbag()
-        for word in wordbag1.keys():
-            if word in wordbag2.keys():
-                intsec = intsec + min(wordbag1.get(word), wordbag2.get(word))
-        wordbag1_size = sum(wordbag1.values())
-        wordbag2_size = sum(wordbag2.values())
-        union = wordbag1_size + wordbag2_size - intsec
+    def jaccard_index(self, bow_a, bow_b):
+        ''' Takes two BOW dictionaries and returns the jaccard index, defined as
+            Jaccard(A, B) = |A and B|/|A or B|
+        '''
+        intsec_words = set(bow_a) & set(bow_b)
+        intsec_vals = [min(bow_a.get(word), bow_b.get(word)) for 
+                                                        word in intsec_words]
+        intsec = sum(intsec_vals)
+        union = sum(bow_a.values()) + sum(bow_b.values()) - intsec
         return float(intsec / union)
 
-    def export_html(self):
-        pass
+
+class ArticleComparisons:
+    def __init__(self, source, target):
+        self.source = source
+        self.target = target
+        self.comparer = DocumentComparisons()
+
+    def jaccard_matrix(self):
+        ''' With an m-sentence source document and n-sentence target, 
+        returns a m x n symmetric matrix with jaccard indices between 
+        the sentences 
+        '''
+        source_bow = self.source.get_bow_sentences()
+        target_bow = self.target.get_bow_sentences()
+        jac_mat = np.zeros((len(source_bow), len(target_bow)))
+        for i in range(len(source_bow)):
+            for j in range(len(target_bow)):
+                jac_mat[i, j] = self.comparer.jaccard_index(source_bow[i], 
+                                                            target_bow[j])
+        return jac_mat
+
+
+
