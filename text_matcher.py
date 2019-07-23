@@ -20,6 +20,9 @@ class SentenceMatcher:
         self.sent1_length = sentence1.word_length
         self.sent2_length = sentence2.word_length
 
+    def __str__(self):
+
+
     def jaccard_index(self):
         '''  Output: The Jaccard similarity value (type: float) between the wordbag1 and wordbag2
                         https://en.wikipedia.org/wiki/Jaccard_index '''
@@ -71,9 +74,9 @@ class History:
         self.min_consec_maybes = config.min_consec_maybes
 
     def __str__(self):
-        return str(self.candidates)
+        return str([x.__str__() for x in self.candidates])
 
-    def length(self):
+    def __len__(self):
         ''' Output: An int, the number of match candidates in the list self.candidates '''
         return len(self.candidates)
 
@@ -92,8 +95,8 @@ class History:
                     it is determine to be a true match and a list of the match candidates are returned.
                      - If the history does not meet the criterion then the match candidates are not a true
                     match and the history is deleted'''
-        if self.length() >= length:
-            if self.length() >= self.min_consec_maybes:
+        if len(self) >= length:
+            if len(self) >= self.min_consec_maybes:
                 matches = history.candidates
             else:
                 for candidate in self.candidates:
@@ -166,12 +169,12 @@ class DocumentMatcher:
                             pass
                 self.histories = matched_histories
                 # get max length of all histories (matching or unmatching)
-                max_length = max([h.length() for h in matched_histories + unmatched_histories])
+                max_length = max([len(h) for h in matched_histories + unmatched_histories])
                 # flush unmatching histories
                 self.matches += list(map(lambda x: x.flush(max_length), unmatched_histories))
 
          #flush all remaining histories
-        max_length = max([h.length() for h in self.histories])
+        max_length = max([len(h) for h in self.histories])
         self.matches += list(map(lambda x: x.flush(max_length), self.histories))
 
 
