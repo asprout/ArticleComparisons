@@ -58,6 +58,10 @@ class MatchCandidate:
         self.sent2_id = sent2_id
         self.match = match
 
+    def __str__(self):
+        return str((self.sent1_id, self.sent2_id, self.match))
+
+
 class History:
     '''A History object is used to keep track of match candidates and help determine which candidates are
          true matches and which candidates can be ruled out as potential matches. A history starts with a single
@@ -65,6 +69,9 @@ class History:
     def __init__(self, match_candidate):
         self.candidates = [match_candidate]
         self.min_consec_maybes = config.min_consec_maybes
+
+    def __str__(self):
+        return str(self.candidates)
 
     def length(self):
         ''' Output: An int, the number of match candidates in the list self.candidates '''
@@ -140,40 +147,33 @@ class DocumentMatcher:
             if self.histories == []:
                 self.histories = [History(c) for c in candidates]
             else:
-                matching_histories = []
-                unmatching_histories = []
+                # a list of History instances that have a candidate match
+                matched_histories = []
+                # a list of History instances that have no candidate match
+                unmatched_histories = []
                 for history in self.histories:
                     if any(list(filter(lambda x: history.is_next(x), candidates))):
-                        matching_histories += [history]
+                        matched_histories += [history]
                     else:
-                        unmatching_histories += [history]
+                        unmatched_histories += [history]
                 # add candidates to matching histories
-                for history in matching_histories:
+                for history in matched_histories:
                     for c in candidates:
                         if history.is_next(c):
                             history.add_candidate(c)
                             break
                         else:
                             pass
-                self.histories = matching_histories
+                self.histories = matched_histories
                 # get max length of all histories (matching or unmatching)
-                max_length = max([history.length() for history in [matching_histories + unmatching_histories]])
+                max_length = max([h.length() for h in matched_histories + unmatched_histories])
                 # flush unmatching histories
-                self.matches += list(map(lambda x: x.flush(max_length), unmatching_histories))
+                self.matches += list(map(lambda x: x.flush(max_length), unmatched_histories))
 
+         #flush all remaining histories
+        max_length = max([h.length() for h in self.histories])
+        self.matches += list(map(lambda x: x.flush(max_length), self.histories))
 
-
-
-                    #rule_out unmatching / flush
-                    #add to matching
-
-
-                    #add history to histories
-
-            if
-            candidate.sent1_id
-            candidate.sent2_id
-            candidate.match
 
 
 
