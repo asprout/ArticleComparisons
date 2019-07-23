@@ -80,7 +80,7 @@ class History:
         new_j = candidate.sent2_id
         return (i + 1 == new_i and j + 1 == new_j)
 
-    def flush_history(self, length):
+    def flush(self, length):
         ''' Output:   - If the history is long enough or contains "Yes" match candidates then
                     it is determine to be a true match and a list of the match candidates are returned.
                      - If the history does not meet the criterion then the match candidates are not a true
@@ -149,9 +149,17 @@ class DocumentMatcher:
                         unmatching_histories += [history]
                 # add candidates to matching histories
                 for history in matching_histories:
+                    for c in candidates:
+                        if history.is_next(c):
+                            history.add_candidate(c)
+                            break
+                        else:
+                            pass
 
+                # get max length of all histories (matching or unmatching)
+                max_length = max([historty.length() for history in [matching_histories + unmatching_histories]])
                 # flush unmatching histories
-                for
+                self.matches += list(map(lambda x: x.flush(max_length), unmatching_histories))
 
 
 
