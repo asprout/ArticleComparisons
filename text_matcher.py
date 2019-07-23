@@ -6,8 +6,6 @@ class SentenceMatcher:
     ''' The SentenceMatcher takes in:
          sentence1: an instance of the Sentence class
          sentence2: an instance of the Sentence class
-         jaccard_threshold (type: float): a cut-off value for the jaccard index, below which the two sentences will be
-                            considered definitely not a match and assigned a match value of "No"
         min_sentence_length (type:int): the minimum sentence length  -- measured in words -- both sentence1
                                 and sentence2 must satisfy for the two sentences to be considered a "Yes" a match,
                                 GIVEN THAT the jaccard index is above jaccard_threshold.
@@ -103,7 +101,7 @@ class History:
 
 
 class DocumentMatcher:
-''' The DocumentMatcher object is used to identify sentence matches between two documents
+    ''' The DocumentMatcher object is used to identify sentence matches between two documents
         target_document: a Document object
         source_document: a Document object
         min_consec_maybe (type: int): The minimum number of consecutive candidates with a match value of "Maybe"
@@ -117,11 +115,13 @@ class DocumentMatcher:
         self.min_consec_maybes = config.min_consec_maybes
         self.target_sentences = [Sentence(s) for s in target_document.sentences]
         self.source_sentences = [Sentence(s) for s in target_document.sentences]
-        self.candidates = []  # a list of MatchCandidate instances, starts as an empty list
+          # a dict where each key is the target sentences index and each value is a list of MatchCandidate instances,
+          # starts as an empty list
+        self.candidates = {k:[] for k,sent in enumerate(self.target_sentences)}
         self.histories = [] # a list of History instances, starts as an empty list
 
-    def set_match_candidates(self):
-        ''' Output: sets self.candidates attribute to be a list of all of the sentence match
+    def set_candidates(self):
+        ''' Output: sets self.candidates attribute to be such that each value is a list of all of the sentence match
                 candidates in the document
         '''
         for i, target_s in enumerate(self.target_sentences):
@@ -130,13 +130,21 @@ class DocumentMatcher:
                 match_value = match.is_match()
                 if (match_value in ["Yes", "Maybe"]):   #check if sentences are possibly a match
                     candidate = MatchCandidate(i, j, match_value)
-                    self.candidates += [candidate]         # if possible a match, add to candidates
+                    self.candidates[i]+=[candidate]         # if possible a match, add to candidates
 
     def find_matches(self):
-        for candidate in self.candidates:
-            for history in self.histories:
-                if history.is_next(candidate):
+        for candidates in self.candidates.values():
+            if self.histories == []:
+
+            else:
+                for history in self.histories:
+                    matching = list(filter(lambda x: history.is_next(x), candidates))
+                    unmatching = list(filter(lambda x: not(history.is_next(x)), candidates))
+
+                 history.is_next(candidate):
                     history.add_candidate(candidate)
+                    #add history to histories
+
 
             if
             candidate.sent1_id
