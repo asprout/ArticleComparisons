@@ -142,6 +142,7 @@ class DocumentMatcher:
                     else:
                         unmatching_histories += [history]
                 # add candidates to matching histories
+                for history in matching_histories
 
 
 
@@ -151,7 +152,6 @@ class DocumentMatcher:
 
 
                     #add history to histories
-
 
             if
             candidate.sent1_id
