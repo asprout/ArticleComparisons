@@ -81,15 +81,21 @@ class History:
         return (i + 1 == new_i and j + 1 == new_j)
 
     def flush_history(self, length):
-        '''  '''
+        ''' Output:   - If the history is long enough or contains "Yes" match candidates then
+                    it is determine to be a true match and a list of the match candidates are returned.
+                     - If the history does not meet the criterion then the match candidates are not a true
+                    match and the history is deleted'''
         if self.length() >= length:
             if self.length() >= self.min_consec_maybes:
-                copied_sentences = history.candidates
+                matches = history.candidates
             else:
                 for candidate in self.candidates:
                     if candidate.match == "Yes":
-                        copied_sentences = history_matches
+                        matches = history.candidates
                         break
+            return matches
+        else:
+            del self
 
     def add_candidate(self, candidate):
         ''' Add candidate '''
@@ -142,7 +148,10 @@ class DocumentMatcher:
                     else:
                         unmatching_histories += [history]
                 # add candidates to matching histories
-                for history in matching_histories
+                for history in matching_histories:
+
+                # flush unmatching histories
+                for
 
 
 
