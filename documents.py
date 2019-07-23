@@ -12,14 +12,15 @@ import nltk #tokenize words and sentences based on language
 
 ###################################################
 class Document:
-    def __init__(self, file_name, text_encoding='utf8', text_language='english'):
-        self.file_name = file_name
-        self.text_encoding = text_encoding
-        self.language = text_language
-        with open(file_name, 'r+', encoding=text_encoding) as text_file:
+    def __init__(self):
+        config = Config()
+        self.file_name = config.file_name
+        self.text_encoding = config.text_encoding
+        self.language = config.text_language
+        with open(self.file_name, 'r+', encoding=self.text_encoding) as text_file:
             self.text = text_file.read()
         self.paragraphs = self.text.split("\n")  # A list of document paragraphs
-        self.sentences = nltk.sent_tokenize(self.text, language=text_language) # A list of document sentences
+        self.sentences = nltk.sent_tokenize(self.text, language=self.text_language) # A list of document sentences
         self.sentence_length = len(self.sentences)
 
     def __str__(self):
