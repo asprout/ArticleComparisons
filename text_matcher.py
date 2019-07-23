@@ -1,5 +1,6 @@
 import documents #get document classes
-import Config # get parameter class
+import config # get parameter class
+config = Config()
 
 class SentenceMatcher:
     ''' The SentenceMatcher takes in:
@@ -11,11 +12,11 @@ class SentenceMatcher:
                                 and sentence2 must satisfy for the two sentences to be considered a "Yes" a match,
                                 GIVEN THAT the jaccard index is above jaccard_threshold.
     '''
-    def __init__(self, sentence1, sentence2, jaccard_threshold, min_sentence_length):
+    def __init__(self, sentence1, sentence2):
         self.sentence1 = sentence1
         self.sentence2 = sentence2
-        self.jaccard_threshold = jaccard_threshold
-        self.min_sentence_length = min_sentence_length
+        self.jaccard_threshold = config.jaccard_threshold
+        self.min_sentence_length = config.min_sentence_length
         self.wordbag1 = sentence1.wordbag()
         self.wordbag2 = sentence2.wordbag()
         self.sent1_length = sentence1.word_length
@@ -65,6 +66,7 @@ class History:
          MatchCandidate object, but other candidates can be added to the history with the .add_candidate() method'''
     def __init__(self, match_candidate):
         self.candidates = [match_candidate]
+        self.min_consec_maybes = config.min_consec_maybes
 
     def length(self):
         ''' Output: An int, the number of match candidates in the list self.candidates '''
@@ -107,15 +109,17 @@ class DocumentMatcher:
         min_consec_maybe (type: int): The minimum number of consecutive candidates with a match value of "Maybe"
                                         required to consider the sentences corresponding to the candidates as
                                         sentence matches (or copies)'''
-    def __init__(self, target_document, source_document, min_consec_maybe):
+    def __init__(self, target_document, source_document):
         self.target_doc = target_document
         self.source_doc = source_document
-        self.min_consec_candidates = min_consec_maybe
+        self.jaccard_threshold = config.jaccard_threshold
+        self.min_sentence_length = config.min_sentence_length
+        self.min_consec_maybes = config.min_consec_maybes
         self.target_sentences = [Sentence(s) for s in target_document.sentences]
         self.source_sentences = [Sentence(s) for s in target_document.sentences]
         self.candidates = []  #a list of the match candidates, starts as an empty list
 
-    def get_match_candidates(self, jaccard_threshold, min_sentence_length):
+    def get_match_candidates(self):
         ''' Inputs: jaccard_threshold (type: float): a cut-off value for the jaccard index, below which the
                                                     two sentences will be considered definitely not a match
                                                     and assigned a match value of "No"
@@ -124,7 +128,7 @@ class DocumentMatcher:
         '''
         for i, target_s in enumerate(self.target_sentences):
             for j,source_s in enumerate(self.source_sentences):
-                match = SentenceMatcher(target_s, source_s, jaccard_threshold, min_sentence_length)
+                match = SentenceMatcher(target_s, source_s)
                 match_value = match.is_match()
                 if (match_value in ["Yes", "Maybe"]):   #check if sentences are possibly a match
                     candidate = MatchCandidate(i, j, match_value)

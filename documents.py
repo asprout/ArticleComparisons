@@ -10,17 +10,17 @@ import string #remove punctuation
 from collections import Counter #contains word counter function
 import nltk #tokenize words and sentences based on language
 
+config = Config()
 ###################################################
 class Document:
-    def __init__(self):
-        config = Config()
-        self.file_name = config.file_name
+    def __init__(self, file_name):
+        self.file_name = file_name
         self.text_encoding = config.text_encoding
         self.language = config.text_language
         with open(self.file_name, 'r+', encoding=self.text_encoding) as text_file:
             self.text = text_file.read()
         self.paragraphs = self.text.split("\n")  # A list of document paragraphs
-        self.sentences = nltk.sent_tokenize(self.text, language=self.text_language) # A list of document sentences
+        self.sentences = nltk.sent_tokenize(self.text, language=self.language) # A list of document sentences
         self.sentence_length = len(self.sentences)
 
     def __str__(self):
@@ -44,17 +44,16 @@ class Document:
             new_dict[k] = Sentence(v).wordbag()
         return new_dict
 
-
     def export_html(self):
         pass
 
 
 class Paragraph:
-    def __init__(self, text_string, text_encoding='utf8', text_language='english'):
+    def __init__(self, text_string):
         self.text = text_string
-        self.encoding = text_encoding
-        self.language = text_language
-        self.sentences = nltk.sent_tokenize(self.text, language=text_language)
+        self.encoding = config.text_encoding
+        self.language = config.text_language
+        self.sentences = nltk.sent_tokenize(self.text, language=self.language)
 
     def __str__(self):
         return self.text
@@ -64,12 +63,12 @@ class Paragraph:
 
 
 class Sentence:
-    def __init__(self, text_string, text_encoding='utf8', text_language='english'):
+    def __init__(self, text_string):
         self.text = text_string
-        self.encoding = text_encoding
-        self.language = text_language
+        self.encoding = config.text_encoding
+        self.language = config.text_language
         self.words = nltk.word_tokenize(self.text.translate(str.maketrans('', '', string.punctuation)),
-                                        language=text_language) # A list of sentence words without punctuation
+                                        language=self.language) # A list of sentence words without punctuation
         self.word_length = len(self.words)
 
     def __str__(self):
