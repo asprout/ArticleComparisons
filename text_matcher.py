@@ -1,5 +1,6 @@
 import documents #get document classes
 import config # get parameter class
+from copy import copy #copy objects
 config = Config()
 
 class SentenceMatcher:
@@ -178,7 +179,7 @@ class DocumentMatcher:
                             break
                         else:
                             pass
-                self.histories = matched_histories
+                self.histories = matched_histories.copy()
                 # get max length of all histories (matching or unmatching)
                 max_length = max([len(h) for h in (matched_histories + unmatched_histories)])
                 # flush unmatching histories
