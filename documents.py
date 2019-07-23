@@ -5,7 +5,7 @@
 
 ##########   IMPORT PACKAGES         #########
 
-import Config # get parameter class
+import config # get parameter class
 import string #remove punctuation
 from collections import Counter #contains word counter function
 import nltk #tokenize words and sentences based on language
@@ -98,7 +98,6 @@ class Sentence:
         wordbag2_size = sum(wordbag2.values())
         union = wordbag1_size + wordbag2_size - intsec
         return float(intsec / union)
-
 
     def export_html(self):
         pass
