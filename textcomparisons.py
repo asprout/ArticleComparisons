@@ -1,6 +1,9 @@
 import numpy as np 
 import matplotlib.pyplot as plt
 import documents
+from scipy.cluster import hierarchy
+from scipy.spatial.distance import squareform
+import time
 
 class DocumentComparisons:
     def __init__(self, thresh_jaccard = .25, thresh_same_sent = .9):
@@ -99,10 +102,10 @@ class DocumentComparisons:
         total = np.sum(matches)
         if total <= 1:
             return matches
-        maxmatch = np.argmax(jaccards)
+        argmax = np.argmax(jaccards) # maxmatch = jaccards[argmax] 
         if (self.thresh_same_sent is not None and 
-                                    jaccards[maxmatch] > self.thresh_same_sent):
-            return [0] * maxmatch + [1] + [0] * (len(jaccards) - maxmatch - 1)
+                                    jaccards[argmax] > self.thresh_same_sent):
+            return [0] * argmax + [1] + [0] * (len(jaccards) - argmax - 1)
         return matches/total
 
     def jaccard_score(self, source = None, target = None, weighted = False):
@@ -152,7 +155,7 @@ class ArticleComparisons(DocumentComparisons):
         self.weighted = False
         self.docs = {}
         self.score_mat = None 
-        self.clusters = [] # List of cluster sets (by id)
+        self.clusters = None
 
     def update_docs(self, docs):
         """ If docs is not None, updates the documents stored in class instance, 
@@ -163,24 +166,50 @@ class ArticleComparisons(DocumentComparisons):
             return True 
         return False
 
-    def article_clusters(self, docs = None):
-        score_mat = self.jac_score_mat(docs)
-        thresh = self.thresh_same_doc 
-        unique = set()
+    def ceilzero(self, x):
+        return max(x, 0)
 
-    def jac_score_mat(self, docs = None, weighted = False):
+    def flatten(self, vec):
+        return [val for sublist in vec for val in sublist]
+
+    def cluster_articles(self, docs = None, thresh_same_doc = None):
+        if thresh_same_doc is not None:
+            self.thresh_same_doc = thresh_same_doc
+        score_mat = self.jac_score_mat(docs)
+        if score_mat is None: return 
+        dist_mat = np.vectorize(self.ceilzero)(1 - score_mat)
+        hclust = hierarchy.linkage(squareform(dist_mat), method = "complete")
+        self.clusters = self.flatten(hierarchy.cut_tree(hclust, height = 1 - self.thresh_same_doc))
+        return hclust 
+
+    def get_article_clusters(self, docs = None, thresh_same_doc = None):
+        self.cluster_articles(docs, thresh_same_doc)
+        return self.clusters
+
+    def prop_unique_clusters(self):
+        if self.clusters is not None:
+            return len(np.unique(self.clusters))/len(self.clusters)
+
+    def jac_score_mat(self, docs = None, weighted = False, progress = True):
         ''' Returns stored matrix of pairwise document match stores, 
         or computes and returns new matrix if docs is not None, or weighted is
         different from self.weighted 
         '''
+        start = time.time()
         if all([self.score_mat is not None, 
                not self.update_docs(docs), 
                weighted == self.weighted]):
             return self.score_mat
+        if docs is None:
+            if self.docs is None: return 
+            docs = self.docs 
 
         score_mat = np.zeros((len(docs), len(docs)))
 
         for i, doc1id in enumerate(docs):
+            if progress and round(i % (len(docs) / 10)) == 0:
+                print(i, "/", len(docs), "done,", 
+                     round(time.time() - start, 2), "seconds elapsed")
             for j, doc2id in enumerate(docs):
                 if (i > j):
                     score_mat[i, j] = score_mat[j, i]
