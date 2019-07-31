@@ -6,7 +6,7 @@ from scipy.spatial.distance import squareform
 import time
 
 class DocumentComparisons:
-    def __init__(self, thresh_jaccard = .25, thresh_same_sent = .9):
+    def __init__(self, thresh_jaccard = .5, thresh_same_sent = .9):
         self.thresh_jaccard = thresh_jaccard
         self.thresh_same_sent = thresh_same_sent 
         # Store information about the last comparison done
@@ -27,8 +27,8 @@ class DocumentComparisons:
         index = float(intsec / max(1.0, union))
         if visualize:
             print("Jaccard Index:", index)
-            print("U:", intsec_words)
-            print("I:", set(bow_a) - set(bow_b), "\n", set(bow_b) - set(bow_a))
+            print("I:", intsec_words)
+            print("U:", set(bow_a) - set(bow_b), "\n", set(bow_b) - set(bow_a))
         return index
 
     def jaccard_matrix(self, source, target):
@@ -81,10 +81,8 @@ class DocumentComparisons:
             if jac_mat[maxmatch, j] > self.thresh_jaccard:
                 matches[maxmatch, j] = 1
 
-        for i in range(matches.shape[0]):
-            matches[i, :] = self.weigh_matches(matches[i, :], jac_mat[i, :])
-        for j in range(matches.shape[1]):
-            matches[:, j] = self.weigh_matches(matches[:, j], jac_mat[:, j])
+        matches = self.weigh_matches(matches, jac_mat)
+        matches = (self.weigh_matches(matches.T, jac_mat.T)).T
 
         self.last_jaccard_matches = matches
         return matches
@@ -95,18 +93,24 @@ class DocumentComparisons:
         return self.last_jaccard_matches
 
     def weigh_matches(self, matches, jaccards):
-        ''' if the sum is > 1, normalizes arr such that it sums to one:
-        if the largest value is above a threshold, sets the largest to one, 
-        otherwise divides by the sum
+        ''' 
+        Goes through the rows of the matrix. For each row,
+        normalizes such that it sums to at most one by either:
+        if the largest value is above the threshold for same sentences,
+            sets the largest to one and all other indices in the same row and
+            column to 0
+        otherwise, divides by the sum
         '''
-        total = np.sum(matches)
-        if total <= 1:
-            return matches
-        argmax = np.argmax(jaccards) # maxmatch = jaccards[argmax] 
-        if (self.thresh_same_sent is not None and 
-                                    jaccards[argmax] > self.thresh_same_sent):
-            return [0] * argmax + [1] + [0] * (len(jaccards) - argmax - 1)
-        return matches/total
+        for i in range(matches.shape[0]):
+            argmax = np.argmax(jaccards[i, :]) # maxmatch = jaccards[argmax] 
+            if jaccards[i, argmax] > self.thresh_same_sent:
+                matches[i, :] = [0] * matches.shape[1]
+                matches[:, argmax] = [0] * matches.shape[0]
+                matches[i, argmax] = 1
+            rowsum = np.sum(matches[i, :])
+            if rowsum > 1:
+                matches[i, :] = matches[i, :] / rowsum 
+        return matches
 
     def jaccard_score(self, source = None, target = None, weighted = False):
         match_mat = self.get_match_matrix(source, target)
@@ -149,7 +153,7 @@ class DocumentComparisons:
 
 
 class ArticleComparisons(DocumentComparisons):
-    def __init__(self, thresh_jaccard = .25, thresh_same_sent = .9, thresh_same_doc = .25):
+    def __init__(self, thresh_jaccard = .5, thresh_same_sent = .9, thresh_same_doc = .25):
         DocumentComparisons.__init__(self, thresh_jaccard, thresh_same_sent)
         self.thresh_same_doc = thresh_same_doc
         self.weighted = False

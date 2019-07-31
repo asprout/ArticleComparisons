@@ -46,7 +46,7 @@ results_df["unique"] = np.nan
 
 ac = tc.ArticleComparisons(thresh_jaccard = .25, thresh_same_sent = .9, thresh_same_doc = .25)
 
-i = len(events) - 1
+i = 5
 while results_df.loc[i, "n"] < 1000 and i >= 0:
     sample = article_df.loc[article_df["event"] == events[i], "id"]
     article_dict = dict_by_ids(article_df, sample)
@@ -56,4 +56,4 @@ while results_df.loc[i, "n"] < 1000 and i >= 0:
     results_df.to_csv("results_20190531_2.csv", index = False)
     i = i - 1
 
-results_df.to_csv("results_20190531_2.csv", index = False)
+results_df.to_csv("results_20190531_3.csv", index = False)
