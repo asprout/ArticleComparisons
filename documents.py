@@ -65,7 +65,7 @@ class Document:
         for i, sent in enumerate(self.sentences):
             tokens = tokenizer.tokenize(sent)
             if self.stem:
-                tokens = dict(Counter([ps.stem(token) for token in tokens]))
+                tokens = dict(Counter([ps.stem(token) for token in tokens if len(token) > 1]))
             if len(tokens) > 0 and (tokens not in bow_sentences or (not remove_dups)):
                 bow_sentences.append(tokens)
                 bow_sent_map.append(i)

@@ -15,6 +15,7 @@ class DocumentComparisons:
         self.last_jaccard_matrix = None
         self.last_jaccard_weights = None 
         self.last_jaccard_matches = None
+        self.matches_obsolete = True
 
     def jaccard_index(self, bow_a, bow_b, visualize = False):
         ''' Takes two BOW dictionaries and returns the jaccard index, defined as
@@ -49,6 +50,7 @@ class DocumentComparisons:
         self.last_target = target
         self.last_jaccard_matrix = jac_mat
         self.last_jaccard_weights = weight_mat
+        self.matches_obsolete = True
         return self.last_jaccard_matrix
 
     def get_jaccard_matrix(self, source = None, target = None, weighted = False):
@@ -56,8 +58,8 @@ class DocumentComparisons:
         or target is provided. If weighted, then the indices within the 
         matrix will be weighted by average pairwise sentence length. 
         """
-        if source is not None or target is not None:
-            self.jaccard_matrix(source, target)
+        if self.last_jaccard_matrix is None or self.notNone([source, target]):
+            return self.jaccard_matrix(source, target)
         if weighted: 
             return self.last_jaccard_matrix * self.last_jaccard_weights
         return self.last_jaccard_matrix
@@ -70,8 +72,9 @@ class DocumentComparisons:
         if thresh_jaccard is not None:
             self.thresh_jaccard = thresh_jaccard
         jac_mat = self.get_jaccard_matrix(source, target)
-        matches = np.zeros(jac_mat.shape)
+        #matches = np.zeros(jac_mat.shape)
         # assign sentences to match maximum jaccard indices
+        """
         for i in range(matches.shape[0]):
             maxmatch = np.argmax(jac_mat[i, :])
             if jac_mat[i, maxmatch] > self.thresh_jaccard:
@@ -80,16 +83,21 @@ class DocumentComparisons:
             maxmatch = np.argmax(jac_mat[:, j])
             if jac_mat[maxmatch, j] > self.thresh_jaccard:
                 matches[maxmatch, j] = 1
+        """
+        matches = 1.0 * (jac_mat > self.thresh_jaccard)
 
         matches = self.weigh_matches(matches, jac_mat)
         matches = (self.weigh_matches(matches.T, jac_mat.T)).T
 
         self.last_jaccard_matches = matches
+        self.matches_obsolete = False
         return matches
 
     def get_match_matrix(self, source = None, target = None, thresh_jaccard = None):
-        if any([source is not None, target is not None, thresh_jaccard is not None]):
-            self.match_matrix(source, target, thresh_jaccard)
+        if any([self.last_jaccard_matches is None, self.matches_obsolete, 
+            self.notNone([source, target]), 
+            thresh_jaccard is not None and thresh_jaccard != self.thresh_jaccard]):
+            return self.match_matrix(source, target, thresh_jaccard)
         return self.last_jaccard_matches
 
     def weigh_matches(self, matches, jaccards):
@@ -119,26 +127,6 @@ class DocumentComparisons:
         #return jac_score / np.mean(jac_mat.shape)
         return jac_score / np.min(jac_mat.shape)
 
-    def del_nonconsecutives(self, arr):
-        ''' Takes an array and leaves only the maximum consecutive sequence
-        Note: assumes positive numbers only
-        '''
-        if np.sum(arr) <= 0: # No sequence
-            return arr
-
-        maxind = 0 # Index of start of sequence
-        maxcount = 0 
-        curcount = 0
-        for i in range(len(arr)):
-            if arr[i] == 0:
-                curcount = 0
-            else:
-                curcount += 1 
-            if curcount > maxcount:
-                maxind = i - curcount + 1
-                maxcount = curcount 
-        return [0] * maxind + [1] * maxcount + [0] * (len(arr) - (maxind + maxcount))
-
     def print_sentence_matches(self, thresh_jaccard = None):
         jac_mat = self.get_jaccard_matrix()
         matches = self.get_match_matrix(thresh_jaccard = thresh_jaccard)
@@ -151,6 +139,12 @@ class DocumentComparisons:
                 for j in np.nonzero(matches[i, :])[0]:
                     print("\tT", j, np.round(jac_mat[i, j], 2), ":", target_sents[j], "\n")
 
+    def notNone(self, list):
+        """ returns True if at least one item is not None """
+        for li in list:
+            if li is not None:
+                return True
+        return False
 
 class ArticleComparisons(DocumentComparisons):
     def __init__(self, thresh_jaccard = .5, thresh_same_sent = .9, thresh_same_doc = .25):
@@ -160,8 +154,9 @@ class ArticleComparisons(DocumentComparisons):
         self.docs = {}
         self.score_mat = None 
         self.clusters = None
+        self.hclust = None # stores the hierarchical agglo. clustering
 
-    def update_docs(self, docs):
+    def update_docdict(self, docs):
         """ If docs is not None, updates the documents stored in class instance, 
         and returns whether or not the class instance was updated
         """
@@ -176,18 +171,21 @@ class ArticleComparisons(DocumentComparisons):
     def flatten(self, vec):
         return [val for sublist in vec for val in sublist]
 
-    def cluster_articles(self, docs = None, thresh_same_doc = None):
+    def cluster_articles(self, docs = None, thresh_same_doc = None, plot = False):
         if thresh_same_doc is not None:
             self.thresh_same_doc = thresh_same_doc
         score_mat = self.jac_score_mat(docs)
         if score_mat is None: return 
         dist_mat = np.vectorize(self.ceilzero)(1 - score_mat)
-        hclust = hierarchy.linkage(squareform(dist_mat), method = "complete")
-        self.clusters = self.flatten(hierarchy.cut_tree(hclust, height = 1 - self.thresh_same_doc))
-        return hclust 
+        self.hclust = hierarchy.linkage(squareform(dist_mat), method = "complete")
+        if plot:
+            hierarchy.dendrogram(self.hclust)
+            plt.ylabel("Distance")
+        self.clusters = self.flatten(hierarchy.cut_tree(self.hclust, height = 1 - self.thresh_same_doc))
+        return self.hclust 
 
-    def get_article_clusters(self, docs = None, thresh_same_doc = None):
-        self.cluster_articles(docs, thresh_same_doc)
+    def get_article_clusters(self, docs = None, thresh_same_doc = None, plot = False):
+        self.hclust = self.cluster_articles(docs, thresh_same_doc, plot)
         return self.clusters
 
     def prop_unique_clusters(self):
@@ -201,7 +199,7 @@ class ArticleComparisons(DocumentComparisons):
         '''
         start = time.time()
         if all([self.score_mat is not None, 
-               not self.update_docs(docs), 
+               not self.update_docdict(docs), 
                weighted == self.weighted]):
             return self.score_mat
         if docs is None:
