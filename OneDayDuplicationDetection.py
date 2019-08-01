@@ -42,18 +42,24 @@ events = [event for event in np.unique(article_df["event"]) if not np.isnan(even
 n = [len(article_df.loc[article_df["event"] == event]) for event in events]
 
 results_df = pd.DataFrame(list(zip(events, n)), columns = ["event", "n"])
-results_df["unique"] = np.nan
+results_df["clusters"] = np.nan
+results_df["unique25"] = np.nan
+results_df["unique75"] = np.nan
 
-ac = tc.ArticleComparisons(thresh_jaccard = .25, thresh_same_sent = .9, thresh_same_doc = .25)
+ac = tc.ArticleComparisons(thresh_jaccard = .5, thresh_same_sent = .9, thresh_same_doc = .25)
 
-i = 5
+i = len(events) - 1
 while results_df.loc[i, "n"] < 1000 and i >= 0:
     sample = article_df.loc[article_df["event"] == events[i], "id"]
     article_dict = dict_by_ids(article_df, sample)
-    score_mat = ac.jac_score_mat(article_dict, weighted = False)
-    ac.get_article_clusters()
-    results_df.loc[i, "unique"] = ac.prop_unique_clusters()
-    results_df.to_csv("results_20190531_2.csv", index = False)
+    results_df.loc[i, "clusters"] = {"clusters": ac.cluster_articles(article_dict, thresh_same_doc = 0.25)}
+    results_df.loc[i, "unique25"] = ac.prop_unique_clusters()
+    clusters = ac.cluster_articles(article_dict, thresh_same_doc = 0.75)
+    results_df.loc[i, "unique75"] = ac.prop_unique_clusters()
+    try:
+        results_df.to_csv("results_20190531_clusters1.csv", index = False)
+    except:
+        print("Can't write to csv")
     i = i - 1
 
-results_df.to_csv("results_20190531_3.csv", index = False)
+results_df.to_csv("results_20190531_clusters2.csv", index = False)
