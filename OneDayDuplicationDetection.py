@@ -52,11 +52,17 @@ while i >= 0: # Loops over the events
     start = time.time()
     sample = np.array(article_df.loc[article_df["event"] == events[i], "id"])
     if len(sample) > 500: # maximum size, else too large to run 
-        sample = random.sample(sample, 500)
+        sample = random.sample(list(sample), 500)
     good_inds = [i for i in range(len(sample)) if article_df.loc[sample[i], "paywall"] == 0]
     if not np.isnan(results_df.loc[i, "n_good"]):
         if results_df.loc[i, "n_good"] == len(good_inds):
             print("Event", i, "of size", results_df.loc[i, "n"], "skipped")
+            i -= 1
+            continue
+        elif len(good_inds) == 0:
+            results_df.loc[i, "n_good"] = 0
+            results_df.loc[i, "unique25_good"] = 0
+            results_df.loc[i, "unique25_good"] = 0
             i -= 1
             continue
         good_dict = dict_by_ids(article_df, [sample[i] for i in good_inds])
