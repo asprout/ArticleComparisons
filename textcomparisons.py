@@ -241,7 +241,8 @@ class ArticleComparisons(DocumentComparisons):
         self.get_article_clusters(thresh_same_doc = thresh_same_doc)
         if self.clusters is not None:
             clusters = self.clusters
-            if inds is not None and len(inds) > 0:
+            if inds is not None:
+                if len(inds) == 0: return 0
                 clusters = [clusters[i] for i in inds]
             return len(np.unique(clusters))/len(clusters)
 

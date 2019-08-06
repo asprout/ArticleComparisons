@@ -83,3 +83,4 @@ class Document:
 
     def get_bow_sentences(self):
         return self.bow_sentences
+        
