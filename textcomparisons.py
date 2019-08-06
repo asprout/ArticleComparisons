@@ -36,19 +36,21 @@ class DocumentComparisons:
             Jaccard(A, B) = |A and B|/|A or B|
             if counts is true, then uses word count, not just unique words
         '''
-        intsec_words = set(bow_a) & set(bow_b)
+        set_a = set(bow_a)
+        set_b = set(bow_b)
+        intsec_words = set_a.intersection(set_b)
         if counts:
             intsec_vals = [min(bow_a[word], bow_b[word]) for word in intsec_words]
             intsec = sum(intsec_vals)
             union = sum(bow_a.values()) + sum(bow_b.values()) - intsec
         else:
             intsec = len(intsec_words)
-            union = len(bow_a) + len(bow_b) - intsec
+            union = len(set_a) + len(set_b) - intsec
         index = float(intsec / max(1.0, union))
         if visualize:
             print("Jaccard Index:", index, "with counts", counts)
             print("I:", intsec_words)
-            print("A-B:", set(bow_a) - set(bow_b), "\nB-A:", set(bow_b) - set(bow_a))
+            print("A-B:", set_a - set_b, "\nB-A:", set_b - set_a)
         return index
 
     def jaccard_matrix(self, source, target):
@@ -173,7 +175,6 @@ class ArticleComparisons(DocumentComparisons):
         and returns whether or not the class instance was updated
         """
         if docs is not None and docs is not self.docs:
-            self.docs = docs 
             return True 
         return False
 
@@ -202,6 +203,7 @@ class ArticleComparisons(DocumentComparisons):
                 else:
                     score_mat[i, j] = self.jaccard_score(docs[doc1id], docs[doc2id])
         self.score_mat = score_mat 
+        self.docs = docs 
         return score_mat
 
     def cluster_articles(self, docs = None, plot = False):
@@ -224,7 +226,7 @@ class ArticleComparisons(DocumentComparisons):
     def get_article_clustering(self, docs = None, plot = False):
         ''' Returns clustering object, indexed by document
         '''
-        if self.update_docdict(docs):
+        if self.hclust is None or self.update_docdict(docs):
             self.hclust = self.cluster_articles(docs, plot)
         return self.hclust
 
