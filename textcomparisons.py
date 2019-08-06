@@ -55,8 +55,14 @@ class DocumentComparisons:
         ''' With an m-sentence source document and n-sentence target, 
         returns a m x n symmetric matrix with pairwise jaccard indices
         '''
+        if source is None:
+            source = self.last_source
+        if target is None:
+            target = self.last_target
         source_bow = source.get_bow_sentences()
         target_bow = target.get_bow_sentences()
+        if len(source_bow) < 1 or len(target_bow) < 1:
+            return None 
         jac_mat = np.zeros((len(source_bow), len(target_bow)))
         weight_mat = np.zeros(jac_mat.shape)
         for i in range(len(source_bow)):
@@ -130,8 +136,10 @@ class DocumentComparisons:
         return matches
 
     def jaccard_score(self, source = None, target = None, weighted = False):
+        jac_mat = self.get_jaccard_matrix(source, target, weighted = weighted)
+        if jac_mat is None:
+            return 0 # No valid sentences in either source or target
         match_mat = self.get_match_matrix(source, target)
-        jac_mat = self.get_jaccard_matrix(weighted = weighted)
         jac_score = np.sum(jac_mat * match_mat)
         #return jac_score / np.mean(jac_mat.shape) 
         return jac_score / np.min(jac_mat.shape) # count snippets as duplicates
