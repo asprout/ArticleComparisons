@@ -204,6 +204,9 @@ class ArticleComparisons(DocumentComparisons):
                     score_mat[i, j] = self.jaccard_score(docs[doc1id], docs[doc2id])
         self.score_mat = score_mat 
         self.docs = docs 
+        # Reset clusters due to updated score matrix
+        self.clusters = None 
+        self.hclust = None 
         return score_mat
 
     def cluster_articles(self, docs = None, plot = False):
