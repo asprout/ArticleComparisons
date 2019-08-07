@@ -55,11 +55,11 @@ while i >= 0: # Loops over the events
         sample = random.sample(list(sample), 500)
     good_inds = [i for i in range(len(sample)) if article_df.loc[sample[i], "paywall"] == 0]
     if not np.isnan(results_df.loc[i, "n_good"]):
-        if results_df.loc[i, "n_good"] == len(good_inds):
+        if len(good_inds) > 0 and results_df.loc[i, "n_good"] == len(good_inds):
             print("Event", i, "of size", results_df.loc[i, "n"], "skipped")
             i -= 1
             continue
-        elif len(good_inds) == 0:
+        if len(good_inds) == 0:
             results_df.loc[i, "n_good"] = 0
             results_df.loc[i, "unique25_good"] = 0
             results_df.loc[i, "unique25_good"] = 0
