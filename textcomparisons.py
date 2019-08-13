@@ -17,6 +17,19 @@ def ceilzero(x):
 def flatten(vec):
     return [val for sublist in vec for val in sublist]
 
+def subsetmat(mat, inds):
+    """ returns subset of a symmetric matrix, indexed by inds """
+    subset = np.zeros((len(inds), len(inds)))
+    for i in range(len(inds)):
+        for j in range(len(inds)):
+            subset[i, j] = mat[inds[i], inds[j]]
+    return subset 
+
+def cosinesim(v1, v2):
+    if v1 is None or v2 is None:
+        return 1
+    return np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
+
 class DocumentComparisons:
     ''' A class to make pairwise document similarity comparisons 
     '''
@@ -24,12 +37,10 @@ class DocumentComparisons:
         self.thresh_jaccard = thresh_jaccard # min Jaccard index to be considered a sentence match
         self.thresh_same_sent = thresh_same_sent # Jaccard index to be considered a definite match
         # Store information about the last comparison done
-        self.last_source = None # Note: code currently does not differentiate b/w source and target documents
-        self.last_target = None
-        self.last_jaccard_matrix = None # Matrix of pairwise sentence Jaccard indices
-        self.last_jaccard_weights = None # Matrix of weights by sentence-length
-        self.last_jaccard_matches = None # Matrix of pairwise sentence matches (see match_matrix functions)
-        self.matches_obsolete = True # If the match matrix needs to be updated for Jaccard matrix
+        self.last_source = None
+        self.last_target = None 
+        self.jaccard_matrix = None # Matrix of pairwise sentence Jaccard indices
+        self.jaccard_matches = None # Matrix of pairwise sentence matches (see match_matrix functions)
 
     def jaccard_index(self, bow_a, bow_b, counts = False, visualize = False):
         ''' Takes two BOW dictionaries and returns the jaccard index, defined as
@@ -53,45 +64,53 @@ class DocumentComparisons:
             print("A-B:", set_a - set_b, "\nB-A:", set_b - set_a)
         return index
 
-    def jaccard_matrix(self, source, target):
+    def compute_jaccard_matrix(self, source, target):
         ''' With an m-sentence source document and n-sentence target, 
         returns a m x n symmetric matrix with pairwise jaccard indices
         '''
         if source is None:
             source = self.last_source
-        if target is None:
-            target = self.last_target
         source_bow = source.get_bow_sentences()
+        source_n = len(source_bow)
+        source_lens = source.get_bow_sentence_lens()
+
+        if target is None:
+            target = self.last_target 
         target_bow = target.get_bow_sentences()
-        if len(source_bow) < 1 or len(target_bow) < 1:
+        target_n = len(target_bow)
+        target_lens = target.get_bow_sentence_lens()
+
+        if source_n < 1 or target_n < 1: 
             return None 
-        jac_mat = np.zeros((len(source_bow), len(target_bow)))
-        weight_mat = np.zeros(jac_mat.shape)
-        for i in range(len(source_bow)):
-            for j in range(len(target_bow)):
+
+        jac_mat = np.zeros((source_n, target_n))
+        # only consider sentences that are within a certain length of each other
+        for i in range(source_n):
+            candidates = np.where((target_lens >= source_lens[i] * self.thresh_jaccard) * 
+                                  (target_lens <= source_lens[i] / self.thresh_jaccard))[0]
+            for j in candidates:
                 jac_mat[i, j] = self.jaccard_index(source_bow[i], target_bow[j])
-                weight_mat[i, j] = np.mean([len(source_bow[i]), 
-                                            len(target_bow[j])])
+            """
+            for j in range(target_n):
+                lens = [source_lens[i], target_lens[j]]
+                if 2 * min(lens) >= max(lens):
+                    jac_mat[i, j] = self.jaccard_index(source_bow[i], target_bow[j])
+            """
         # Stores the last matrix computed to avoid redundant work
         self.last_source = source
-        self.last_target = target
-        self.last_jaccard_matrix = jac_mat
-        self.last_jaccard_weights = weight_mat
-        self.matches_obsolete = True
-        return self.last_jaccard_matrix
+        self.last_target = target 
+        self.jaccard_matrix = jac_mat
+        return self.jaccard_matrix
 
-    def get_jaccard_matrix(self, source = None, target = None, weighted = False):
+    def get_jaccard_matrix(self, source = None, target = None):
         """ Returns the last Jaccard matrix or computes a new one if source
-        or target is provided. If weighted, then the indices within the 
-        matrix will be weighted by average pairwise sentence length. 
+        or target is provided.
         """
-        if self.last_jaccard_matrix is None or notNone([source, target]):
-            self.jaccard_matrix(source, target)
-        if weighted: 
-            return self.last_jaccard_matrix * self.last_jaccard_weights
-        return self.last_jaccard_matrix
+        if self.jaccard_matrix is None or notNone([source, target]):
+            return self.compute_jaccard_matrix(source, target)
+        return self.jaccard_matrix
 
-    def match_matrix(self, source = None, target = None, thresh_jaccard = None):
+    def compute_match_matrix(self, source = None, target = None, thresh_jaccard = None):
         ''' Symmetric matrix matching pairwise sentences between two documents:
         1. Creates a match matrix: 1 if pairwise Jaccards >= thres_jaccard, else 0
         2. Weighs match matrix. For each sentence in source:
@@ -106,27 +125,28 @@ class DocumentComparisons:
         matches = 1.0 * (jac_mat >= self.thresh_jaccard)
         matches = self.weigh_matches(matches, jac_mat) # Weigh rows (source sents)
         matches = (self.weigh_matches(matches.T, jac_mat.T)).T # Weigh columns
-        self.last_jaccard_matches = matches
-        self.matches_obsolete = False
-        return self.last_jaccard_matches
+        self.jaccard_matches = matches
+        return self.jaccard_matches
 
     def get_match_matrix(self, source = None, target = None, thresh_jaccard = None):
-        ''' Returns the last computed match matrix, if not obsolete,
+        ''' Returns the last computed match matrix if it exists and all parameters are None,
         else computes and returns a match matrix. 
         '''
-        if any([self.matches_obsolete, notNone([source, target]), 
-            thresh_jaccard is not None and thresh_jaccard != self.thresh_jaccard]):
-            return self.match_matrix(source, target, thresh_jaccard)
-        return self.last_jaccard_matches
+        if self.jaccard_matches is None or notNone([source, target, thresh_jaccard]):
+            return self.compute_match_matrix(source, target, thresh_jaccard)
+        return self.jaccard_matches
 
     def weigh_matches(self, matches, jaccards):
-        ''' Goes through the rows of the match matrix. For each row:
+        ''' Goes through the rows of the matches matrix. For each row:
         if the largest value is above the threshold for same sentences,
             sets corresponding match value to one and
             all other indices in the same row and column to 0
         otherwise, divides by the sum such that the normalized sum is 1
         '''
-        for i in range(matches.shape[0]):
+        rowsums = np.sum(matches, axis = 1)
+        rows = np.where(rowsums > 0)[0]
+        for i in rows:
+        #for i in range(matches.shape[0]):
             argmax = np.argmax(jaccards[i, :]) 
             if jaccards[i, argmax] >= self.thresh_same_sent:
                 matches[i, :] = [0] * matches.shape[1]
@@ -137,8 +157,10 @@ class DocumentComparisons:
                 matches[i, :] = matches[i, :] / rowsum 
         return matches
 
-    def jaccard_score(self, source = None, target = None, weighted = False):
-        jac_mat = self.get_jaccard_matrix(source, target, weighted = weighted)
+    def jaccard_score(self, source = None, target = None):
+        ''' Prints the similarity score between the source and target docs 
+        '''
+        jac_mat = self.get_jaccard_matrix(source, target)
         if jac_mat is None:
             return 0 # No valid sentences in either source or target
         match_mat = self.get_match_matrix(source, target)
@@ -165,43 +187,56 @@ class ArticleComparisons(DocumentComparisons):
     def __init__(self, thresh_jaccard = .5, thresh_same_sent = .9, thresh_same_doc = .25):
         DocumentComparisons.__init__(self, thresh_jaccard, thresh_same_sent)
         self.docs = {}
-        self.score_mat = None # pairwise document similarity score matrix 
         self.thresh_same_doc = thresh_same_doc # similarity score to be considered same article
+        self.score_mat = None # pairwise document similarity score matrix 
         self.clusters = None # list of clusters, indexed by document
         self.hclust = None # hierarchical agglo. clustering object
 
-    def update_docdict(self, docs):
-        """ If docs is not None, updates the documents stored in class instance, 
-        and returns whether or not the class instance was updated
+    def readArticles(self, path):
+        """ Reads df of articles from the given path, and adds a column to store the Doc 
         """
-        if docs is not None and docs is not self.docs:
-            return True 
-        return False
+        article_df = pd.read_csv(path)
+        article_df["doc"] = None 
+        return article_df 
+
+    def dict_by_ids(self, df, ids, para_sep = "###", parser = None):
+        """ Given a dataframe of articles and a list of article ids, 
+        returns a dictionary with ids as keys and Documents as items, 
+        computing and storing the Documents back in the df as needed
+        """
+        doc_dict = {}
+        for doc_id in ids:
+            row = df["id"] == doc_id 
+            if parser is not None:
+                df.loc[row, "doc"] = documents.Document(df.loc[row, "text"].iloc[0], para_sep, parser)
+            elif df.loc[row, "doc"].iloc[0] is None:
+                df.loc[row, "doc"] = documents.Document(df.loc[row, "text"].iloc[0], para_sep)
+            doc_dict[doc_id] = df.loc[row, "doc"].iloc[0]
+        return doc_dict
 
     def jac_score_mat(self, docs = None, progress = True):
         ''' Returns stored matrix of pairwise document match stores, 
         or computes and returns new matrix if docs is not None
         '''
         start = time.time()
-        if self.score_mat is not None and not self.update_docdict(docs):
+        if self.score_mat is not None and (docs is None or docs is self.docs):
             return self.score_mat
         if docs is None:
-            if self.docs is None: 
-                return 
-            docs = self.docs 
+            docs = self.docs
 
         score_mat = np.zeros((len(docs), len(docs)))
 
+        docids = [docid for docid in docs.keys()]
         for i, doc1id in enumerate(docs):
-            if progress and len(docs) > 100 and round(i % (len(docs) / 10)) == 0:
+            if progress and len(docs) > 100 and round(i % 25) == 0:
                 print(i, "/", len(docs), "done,", round(time.time() - start, 2), "seconds elapsed")
-            for j, doc2id in enumerate(docs):
-                if (i > j):
-                    score_mat[i, j] = score_mat[j, i]
-                elif (i == j): # comment this out to make sure self-similarity scores are 1
-                    score_mat[i, j] = 1.0 # leave during actual runs to optimize for runtime
-                else:
-                    score_mat[i, j] = self.jaccard_score(docs[doc1id], docs[doc2id])
+            for j in range(i + 1, len(docids)):
+                doc1 = docs[doc1id]
+                doc2 = docs[docids[j]]
+                if cosinesim(doc1.vec, doc2.vec) > 0.9:
+                    score_mat[i, j] = self.jaccard_score(doc1, doc2)
+        score_mat = score_mat + score_mat.transpose()
+        np.fill_diagonal(score_mat, 1.0)
         self.score_mat = score_mat 
         self.docs = docs 
         # Reset clusters due to updated score matrix
@@ -229,7 +264,7 @@ class ArticleComparisons(DocumentComparisons):
     def get_article_clustering(self, docs = None, plot = False):
         ''' Returns clustering object, indexed by document
         '''
-        if self.hclust is None or self.update_docdict(docs):
+        if self.hclust is None or (docs is not None and docs is not self.docs):
             self.hclust = self.cluster_articles(docs, plot)
         return self.hclust
 
