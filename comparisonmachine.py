@@ -1,5 +1,5 @@
+import multiprocessing as mp # Get number of cores 
 import threading
-import multiprocessing # Get number of cores 
 import numpy as np
 import time
 import documents
@@ -26,7 +26,7 @@ class ParallelComparisons():
 		start = time.time()
 		while self.running:
 			print(f"{self.task_counter}/{len(self.tasks)} done, {round((time.time() - start)/60, 2)}m elapsed")
-			time.sleep(5)
+			time.sleep(30)
 		print(f"{len(self.tasks)} completed in {round((time.time() - start)/60, 2)} minutes")
 
 	def worker(self):
@@ -40,7 +40,9 @@ class ParallelComparisons():
 			doc1 = self.docs[self.docids[doc_indices[0]]]
 			doc2 = self.docs[self.docids[doc_indices[1]]]
 			if tc.cosinesim(doc1.vec, doc2.vec) >= 0.9:
-				self.score_mat[doc_indices[0], doc_indices[1]] = comparer.jaccard_score(doc1, doc2)
+				score_update = comparer.jaccard_score(doc1, doc2)
+				with self.lock:
+					self.score_mat[doc_indices[0], doc_indices[1]] = score_update
 
 	def reader(self, df, para_sep, parser):
 		while True:
@@ -51,8 +53,11 @@ class ParallelComparisons():
 				self.task_counter += 1
 			row = df["id"] == doc_id 
 			if parser is not None or df.loc[row, "doc"].iloc[0] is None:
-				df.loc[row, "doc"] = documents.Document(df.loc[row, "text"].iloc[0], para_sep, parser)
-			self.docs[doc_id] = df.loc[row, "doc"].iloc[0]
+				doc = documents.Document(df.loc[row, "text"].iloc[0], para_sep, parser)
+				with self.lock:
+					df.loc[row, "doc"] = doc
+			with self.lock:
+				self.docs[doc_id] = df.loc[row, "doc"].iloc[0]
 
 	def loadDocs(self, df, ids, para_sep = "###", parser = None):
 		self.docs = {}
@@ -63,23 +68,24 @@ class ParallelComparisons():
 		progress = threading.Thread(target = self.progress)
 		progress.start()
 		threads = []
-		for core in range(multiprocessing.cpu_count()):
+		for core in range(mp.cpu_count()):
 			thread = threading.Thread(target = self.reader, args = (df, para_sep, parser))
 			thread.start()
 			threads.append(thread)
 		for thread in threads:
 			thread.join()
 		self.running = False
+		progress.join()
 
 		return self.docs 
 
 	def run(self, docs = None):
 		if docs is not None:
 			self.docs = docs 
-		self.docids = [i for i in self.docs.keys()]
-		self.tasks = tc.flatten([[[i, j] for j in range(i + 1, len(docs))] for i in range(len(docs))])
+		self.docids = np.sort([i for i in self.docs.keys()])
+		self.tasks = tc.flatten([[[i, j] for j in range(i + 1, len(self.docs))] for i in range(len(self.docs))])
 		self.task_counter = 0 
-		self.score_mat = np.zeros((len(docs), len(docs)))
+		self.score_mat = np.zeros((len(self.docs), len(self.docs)))
 		self.clusters = None
 		self.hclust = None 
 
@@ -87,13 +93,14 @@ class ParallelComparisons():
 		progress = threading.Thread(target = self.progress)
 		progress.start()
 		threads = []
-		for core in range(multiprocessing.cpu_count()):
+		for core in range(mp.cpu_count()):
 			thread = threading.Thread(target = self.worker)
 			thread.start()
 			threads.append(thread)
 		for thread in threads:
 			thread.join()
 		self.running = False
+		progress.join()
 
 		self.score_mat = self.score_mat + self.score_mat.transpose()
 		np.fill_diagonal(self.score_mat, 1.0)

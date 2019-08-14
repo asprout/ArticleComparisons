@@ -1,34 +1,10 @@
 import numpy as np 
 import matplotlib.pyplot as plt
 import documents
+import utils 
 from scipy.cluster import hierarchy
 from scipy.spatial.distance import squareform
 import time
-
-# Helper functions
-
-def notNone(lst):
-    """ returns True if at least one item is not None """
-    return sum([li is not None for li in lst]) > 0
-
-def ceilzero(x):
-    return max(x, 0)
-
-def flatten(vec):
-    return [val for sublist in vec for val in sublist]
-
-def subsetmat(mat, inds):
-    """ returns subset of a symmetric matrix, indexed by inds """
-    subset = np.zeros((len(inds), len(inds)))
-    for i in range(len(inds)):
-        for j in range(len(inds)):
-            subset[i, j] = mat[inds[i], inds[j]]
-    return subset 
-
-def cosinesim(v1, v2):
-    if v1 is None or v2 is None:
-        return 1
-    return np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
 
 class DocumentComparisons:
     ''' A class to make pairwise document similarity comparisons 
@@ -106,7 +82,7 @@ class DocumentComparisons:
         """ Returns the last Jaccard matrix or computes a new one if source
         or target is provided.
         """
-        if self.jaccard_matrix is None or notNone([source, target]):
+        if self.jaccard_matrix is None or utils.notNone([source, target]):
             return self.compute_jaccard_matrix(source, target)
         return self.jaccard_matrix
 
@@ -132,7 +108,7 @@ class DocumentComparisons:
         ''' Returns the last computed match matrix if it exists and all parameters are None,
         else computes and returns a match matrix. 
         '''
-        if self.jaccard_matches is None or notNone([source, target, thresh_jaccard]):
+        if self.jaccard_matches is None or utils.notNone([source, target, thresh_jaccard]):
             return self.compute_match_matrix(source, target, thresh_jaccard)
         return self.jaccard_matches
 
@@ -165,6 +141,7 @@ class DocumentComparisons:
             return 0 # No valid sentences in either source or target
         match_mat = self.get_match_matrix(source, target)
         jac_score = np.sum(jac_mat * match_mat)
+        # print(np.sum(jac_mat), np.sum(match_mat))
         #return jac_score / np.mean(jac_mat.shape) 
         return jac_score / np.min(jac_mat.shape) # count snippets as duplicates
 
@@ -233,7 +210,7 @@ class ArticleComparisons(DocumentComparisons):
             for j in range(i + 1, len(docids)):
                 doc1 = docs[doc1id]
                 doc2 = docs[docids[j]]
-                if cosinesim(doc1.vec, doc2.vec) > 0.9:
+                if utils.cosinesim(doc1.vec, doc2.vec) > 0.9:
                     score_mat[i, j] = self.jaccard_score(doc1, doc2)
         score_mat = score_mat + score_mat.transpose()
         np.fill_diagonal(score_mat, 1.0)
@@ -244,7 +221,7 @@ class ArticleComparisons(DocumentComparisons):
         self.hclust = None 
         return score_mat
 
-    def cluster_articles(self, docs = None, plot = False):
+    def cluster_articles(self, score_mat = None, plot = False):
         ''' Runs hierarchical agglomerative clustering on pairwise document
         distances, computed as 1 - document similarity scores (defined
         as the matrix of match-weighted pairwise sentence Jaccard indices).
@@ -252,29 +229,31 @@ class ArticleComparisons(DocumentComparisons):
             in the cluster meets the distance threshold.
         linkage = complete: '...' if all documents in cluster meets threshold
         '''
-        score_mat = self.jac_score_mat(docs)
-        if score_mat is None: return 
-        dist_mat = np.vectorize(ceilzero)(1 - score_mat)
+        if score_mat is None:
+            if self.score_mat is None:
+                return 
+            score_mat = self.score_mat 
+        dist_mat = np.vectorize(utils.ceilzero)(1 - score_mat)
         self.hclust = hierarchy.linkage(squareform(dist_mat), method = 'single')
         if plot:
             hierarchy.dendrogram(self.hclust)
             plt.ylabel("Distance")
         return self.hclust 
 
-    def get_article_clustering(self, docs = None, plot = False):
+    def get_article_clustering(self, plot = False):
         ''' Returns clustering object, indexed by document
         '''
-        if self.hclust is None or (docs is not None and docs is not self.docs):
+        if self.hclust is None:
             self.hclust = self.cluster_articles(docs, plot)
         return self.hclust
 
-    def get_article_clusters(self, docs = None, thresh_same_doc = None, plot = False):
+    def get_article_clusters(self, thresh_same_doc = None, plot = False):
         ''' Returns list of clusters, indexed by document
         '''
-        self.get_article_clustering(docs, plot)
+        self.get_article_clustering(plot)
         if thresh_same_doc is not None and thresh_same_doc != self.thresh_same_doc:
             self.thresh_same_doc = thresh_same_doc
-        self.clusters = flatten(hierarchy.cut_tree(self.hclust, height = 1 - self.thresh_same_doc))
+        self.clusters = utils.flatten(hierarchy.cut_tree(self.hclust, height = 1 - self.thresh_same_doc))
         return self.clusters
 
     def prop_unique_clusters(self, thresh_same_doc = None, inds = None):
