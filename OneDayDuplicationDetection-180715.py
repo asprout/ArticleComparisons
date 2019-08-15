@@ -42,6 +42,9 @@ if __name__=='__main__':
 
     i = len(events) - 1
     while i >= 0: # Loops over the events
+        if not np.isnan(results_df.loc[i, "unique25"]):
+            i = i - 1
+            continue 
         start = time.time()
         sample = np.array(article_df.loc[article_df["event"] == events[i], "id"])
         good_inds = [i for i in range(len(sample)) if article_df.loc[sample[i], "paywall"] == 0]
@@ -62,7 +65,7 @@ if __name__=='__main__':
             except:
                 print("Can't write to csv")
         print(results_df.loc[i])
-        print("Completed comparisons for Event %d of size %d, %.2fm elapsed" % (i, n[i], utils.minelapsed(start)))
+        print("Completed comparisons for Event %d of size %d, %.2fm elapsed\n" % (i, n[i], utils.minelapsed(start)))
         i = i - 1
 
     results_df.to_csv("results_20180715_clusters.csv", index = False)

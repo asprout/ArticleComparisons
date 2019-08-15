@@ -175,10 +175,10 @@ if __name__=='__main__': # Test multi and serial processing speeds
 	serialmat = dd.similarity_mat(article_dict)
 	print("Jaccard sum:", np.sum(serialmat))
 	print(np.round(serialmat, 2))
-	print("Finished document comparisons via serial processing, %.2fm elapsed" % (utils.minelapsed(start)))
+	print("Finished document comparisons via serial processing, %.2fm elapsed\n" % (utils.minelapsed(start)))
 	### with 500 docs (125,000 comparisons)
 	# mp: 40s to load processes and documents, 2.4m total 
 	# serial: 40s to load documents, 5.5m total
 	### with 1000 docs (500,000 comparisons)
-	# mp: <1m to load, 8.5m total 
-	# serial: 1.2m to load, 19m total 
+	# mp: 1m to load, 9m total 
+	# serial: 2m to load, 20m total 

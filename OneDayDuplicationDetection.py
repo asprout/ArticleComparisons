@@ -43,6 +43,9 @@ if __name__=='__main__':
 
     i = len(events) - 1
     while i >= 0: # Loops over the events
+        if not np.isnan(results_df.loc[i, "unique25"]):
+            i = i - 1
+            continue 
         start = time.time()
         sample = np.array(article_df.loc[article_df["event"] == events[i], "id"])
         good_inds = [i for i in range(len(sample)) if article_df.loc[sample[i], "paywall"] == 0]
