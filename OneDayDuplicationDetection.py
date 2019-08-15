@@ -18,7 +18,7 @@ if __name__=='__main__':
     thresh_jaccard = .5
     thresh_same_sent = .9
     thresh_same_doc = .25
-    date = "20180601"
+    date = "20190601"
     article_df = pd.read_pickle(os.path.join(data_folder, "article_df_" + date))
     
     events = [event for event in np.unique(article_df["event"]) if not np.isnan(event)]
