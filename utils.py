@@ -1,4 +1,6 @@
 import numpy as np
+import matplotlib.pyplot as plt
+import time 
 
 # Helper functions
 
@@ -20,7 +22,40 @@ def subsetmat(mat, inds):
             subset[i, j] = mat[inds[i], inds[j]]
     return subset 
 
+def prop_unique(vec, subset = None):
+    if subset is not None:
+        if len(subset) == 0:
+            return None
+        vec = [vec[i] for i in subset]
+    return len(np.unique(vec))/len(vec)
+
 def cosinesim(v1, v2):
     if v1 is None or v2 is None:
         return 1
     return np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
+
+def display_mat(mat, normalize = False, xlabs = None, ylabs = None):
+    """ Uses matplotlib to display mat; 
+    if normalize is True, then coloring is normalized by range of values
+    """
+    fig = plt.figure(figsize = (20, 20))
+    ax = fig.add_subplot(111)
+    if normalize:
+        ax.matshow(mat, cmap = plt.cm.Blues)
+    else:
+        ax.matshow(mat, cmap = plt.cm.Blues, vmin = 0, vmax = 1)
+    for i in range(mat.shape[0]):
+        for j in range(mat.shape[1]):
+            ax.text(j, i, round(mat[i, j], 2), va = "center", ha = "center")
+    ax.set_xticks([x for x in range(-1, mat.shape[1] + 1)])
+    ax.set_yticks([x for x in range(-1, mat.shape[0] + 1)])
+    if xlabs is not None: 
+        ax.set_xticklabels([''] + xlabs)
+        plt.xticks(rotation = 90)
+        if ylabs is None and mat.shape[0] == mat.shape[1]:
+            ylabs = xlabs
+    if ylabs is not None:
+        ax.set_yticklabels([''] + ylabs)
+
+def minelapsed(start):
+    return (time.time() - start)/60
