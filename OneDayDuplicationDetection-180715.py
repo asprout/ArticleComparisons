@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import random
 import time
 
+import utils
 import documents
 import comparisons
 import comparisonsmachine
