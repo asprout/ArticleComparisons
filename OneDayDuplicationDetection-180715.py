@@ -43,13 +43,18 @@ if __name__=='__main__':
     i = len(events) - 1
     while i >= 0: # Loops over the events
         if not np.isnan(results_df.loc[i, "unique25"]):
+            print("Skipping event number %d" % (i))
             i = i - 1
             continue 
+        print("Starting comparisons for Event %d of size %d" % (i, n[i]))
         start = time.time()
         sample = np.array(article_df.loc[article_df["event"] == events[i], "id"])
+        if n[i] > 10000:
+            sample = random.sample(sample, 1000)
         good_inds = [i for i in range(len(sample)) if article_df.loc[sample[i], "paywall"] == 0]
 
-        sim_mat = comparer.run(article_df, sample, para_sep, parser)
+        article_dict = comparer.dict_by_ids(article_df, sample, para_sep, parser)
+        sim_mat = comparer.run(article_dict)
         dd.cluster_articles(sim_mat)
         results_df.loc[i, "unique25"] = dd.prop_unique_clusters(thresh_same_doc = 0.25)
         results_df.loc[i, "unique25_good"] = dd.prop_unique_clusters(thresh_same_doc = 0.25, subset = good_inds)

@@ -206,7 +206,7 @@ class DuplicationDetection(DocumentComparisons):
             for j in range(i + 1, ndocs):
                 doc1 = docs[doc1id]
                 doc2 = docs[docids[j]]
-                if utils.cosinesim(doc1.vec, doc2.vec) >= 0.9:
+                if utils.cosinesim(doc1.vec, doc2.vec) >= 0.8:
                     sim_mat[i, j] = self.jaccard_score(doc1, doc2)
             if progress and round(i % 100) == 0:
                 print("%d of %d rows completed, %.2fm elapsed" % (i, len(docs), utils.minelapsed(start)))

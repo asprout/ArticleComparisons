@@ -87,6 +87,7 @@ class MultiComparisons():
 	para_sep = "###"
 	parser = None
 	comparer = DocumentComparer(thresh_jaccard, thresh_same_sent)
+	pool = None
 	start = time.time()
 
 	def __init__(self):
@@ -110,21 +111,26 @@ class MultiComparisons():
 		doc1 = docs[0]
 		doc2 = docs[1]
 		# Only compare pairs with high vector cosine similarity 
-		if utils.cosinesim(doc1.vec, doc2.vec) >= 0.9:
+		if utils.cosinesim(doc1.vec, doc2.vec) >= 0:
 			return self.comparer.jaccard_score(doc1, doc2)
 		return 0
 
-	def similarity_mat(self, docs, pool = None, progress = True):
+	def similarity_mat(self, docs, progress = True):
 		docids = np.sort([i for i in docs.keys()]) # Order by docid
 		ndocs = len(docids)
 		score_mat = np.zeros((ndocs, ndocs)) # Initialize score matrix 
 		# MULTIPROCESSING: create and distribute asynchronous document pair comparison tasks
+		#tasks = utils.flatten([[[docs[docids[i]], docs[docids[j]]] for j in range(i + 1, ndocs)] for i in range(ndocs)])
 		tasks = [[docs[docids[i]], docs[docids[j]]] for i in range(ndocs) for j in range(i + 1, ndocs)]
-		if pool is None:
-			pool = mp.Pool(processes = min(mp.cpu_count() - 1, round(ndocs/50)))
+		if self.pool is None:
+			pool = mp.Pool(processes = min(mp.cpu_count() - 1, round(ndocs/50 + 1)))
+		else: # Use the last pool created, and delete it from shared variables to avoid copying
+			pool = self.pool
+			self.pool = None 
 		results = pool.imap(self.worker, tasks)
+		mat_inds = np.triu_indices(ndocs, 1)
 		for i, score in enumerate(results):
-			score_mat[int(i/ndocs), i%ndocs] = score 
+			score_mat[mat_inds[0][i], mat_inds[1][i]] = score 
 			if progress and i % 10000 == 0:
 				print("%d of %d comparisons made, %.2fm elapsed" % (i, len(tasks), utils.minelapsed(self.start)))
 		# Fill in rest of score matrix with upper triangle of results 
@@ -133,11 +139,7 @@ class MultiComparisons():
 		print("Finished document comparisons via multiprocessing, %.2fm elapsed" % (utils.minelapsed(self.start)))
 		return score_mat 
 
-	def run(self, docs, progress = True):
-		self.start = time.time()
-		return self.similarity_mat(docs, progress)
-
-	def run(self, df, ids, para_sep = None, parser = None, progress = True):
+	def dict_by_ids(self, df, ids, para_sep = None, parser = None):
 		self.start = time.time()
 		ndocs = len(ids)
 		# Update document parsing parameters as necessary 
@@ -146,15 +148,20 @@ class MultiComparisons():
 		if parser is not None:
 			self.parser = parser 
 		# MULTIPROCESSING: create and distribute asynchronous tasks to read docs
-		tasks = [df.loc[i, ["id", "text", "doc"]] for i in df["id"][ids]]
-		pool = mp.Pool(processes = min(mp.cpu_count() - 1, round(ndocs/50)))
+		tasks = [df.loc[df["id"] == i, ["id", "text", "doc"]].iloc[0] for i in ids]
+		pool = mp.Pool(processes = min(mp.cpu_count() - 1, round(ndocs/50 + 1)))
 		results = pool.imap(self.reader, tasks)
 		docs = {}
 		for i, doc in enumerate(results):
 			docs[ids[i]] = doc
-			df.loc[df["id"] == i, "doc"] = doc 
-		print("Finished loading documents via multiprocessing, %.2fm elapsed" % (utils.minelapsed(self.start)))
-		return self.similarity_mat(docs, pool, progress)
+			df.loc[df["id"] == ids[i], "doc"] = doc 
+		print("Loaded documents via multiprocessing, %.2fm elapsed" % (utils.minelapsed(self.start)))
+		self.pool = pool 
+		return docs
+
+	def run(self, docs, progress = True):
+		self.start = time.time()
+		return self.similarity_mat(docs = docs, progress = progress)
 
 if __name__=='__main__': # Test multi and serial processing speeds
 	article_df = pd.read_pickle(os.path.join("data", "article_df_20180715"))
@@ -164,18 +171,35 @@ if __name__=='__main__': # Test multi and serial processing speeds
 
 	comparer = MultiComparisons()
 	comparer.setThresholds(thresh_jaccard = .5, thresh_same_sent = .9, thresh_same_doc = .25)
-	mat = comparer.run(article_df, sample, "###", "spacy")
+	dd = comparisons.DuplicationDetection(thresh_jaccard = .5, thresh_same_sent = .9, thresh_same_doc = .25)
+
+	article_dict = comparer.dict_by_ids(article_df, sample, "###", "spacy")
+	mat = comparer.run(article_dict)
 	print("Jaccard sum:", np.sum(mat))
 	print(np.round(mat, 2))
+	dd.cluster_articles(mat)
+	print("% Unique for 25, 75, 25_good, 75_good:")
+	print(dd.prop_unique_clusters(thresh_same_doc = 0.25),
+		dd.prop_unique_clusters(thresh_same_doc = 0.75),
+		dd.prop_unique_clusters(thresh_same_doc = 0.25, subset = good_inds),
+		dd.prop_unique_clusters(thresh_same_doc = 0.75, subset = good_inds))
+
+	print("\n SERIAL PROCESSING \n")
 
 	start = time.time()
-	dd = comparisons.DuplicationDetection(thresh_jaccard = .5, thresh_same_sent = .9, thresh_same_doc = .25)
 	article_dict = dd.dict_by_ids(article_df, sample, "###", "spacy")
-	print("Finished loading documents via serial processing, %.2fm elapsed" % (utils.minelapsed(start)))
+	print("Loaded documents via serial processing, %.2fm elapsed" % (utils.minelapsed(start)))
 	serialmat = dd.similarity_mat(article_dict)
 	print("Jaccard sum:", np.sum(serialmat))
 	print(np.round(serialmat, 2))
 	print("Finished document comparisons via serial processing, %.2fm elapsed\n" % (utils.minelapsed(start)))
+	print("% Unique for 25, 75, 25_good, 75_good:")
+	dd.cluster_articles(serialmat)
+	print(dd.prop_unique_clusters(thresh_same_doc = 0.25),
+		dd.prop_unique_clusters(thresh_same_doc = 0.75),
+		dd.prop_unique_clusters(thresh_same_doc = 0.25, subset = good_inds),
+		dd.prop_unique_clusters(thresh_same_doc = 0.75, subset = good_inds))
+
 	### with 500 docs (125,000 comparisons)
 	# mp: 40s to load processes and documents, 2.4m total 
 	# serial: 40s to load documents, 5.5m total
