@@ -13,7 +13,7 @@ import comparisonsmachine
 if __name__=='__main__':
     start = time.time()
     data_folder = "data"
-    para_sep = "###"
+    para_sep = "\n"
     parser = "spacy"
     thresh_jaccard = .5
     thresh_same_sent = .9
