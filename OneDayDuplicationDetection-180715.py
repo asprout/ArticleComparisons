@@ -50,7 +50,7 @@ if __name__=='__main__':
         start = time.time()
         sample = np.array(article_df.loc[article_df["event"] == events[i], "id"])
         if n[i] > 10000:
-            sample = random.sample(sample, 1000)
+            sample = random.sample(list(sample), 1000)
         good_inds = [i for i in range(len(sample)) if article_df.loc[sample[i], "paywall"] == 0]
 
         article_dict = comparer.dict_by_ids(article_df, sample, para_sep, parser)

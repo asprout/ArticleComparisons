@@ -123,7 +123,7 @@ class MultiComparisons():
 		#tasks = utils.flatten([[[docs[docids[i]], docs[docids[j]]] for j in range(i + 1, ndocs)] for i in range(ndocs)])
 		tasks = [[docs[docids[i]], docs[docids[j]]] for i in range(ndocs) for j in range(i + 1, ndocs)]
 		if self.pool is None:
-			pool = mp.Pool(processes = min(mp.cpu_count() - 1, round(ndocs/50 + 1)))
+			pool = mp.Pool(processes = min(mp.cpu_count() - 2, round(ndocs/50 + 1)))
 		else: # Use the last pool created, and delete it from shared variables to avoid copying
 			pool = self.pool
 			self.pool = None 
@@ -137,6 +137,8 @@ class MultiComparisons():
 		score_mat = score_mat + score_mat.transpose()
 		np.fill_diagonal(score_mat, 1.0)
 		print("Finished document comparisons via multiprocessing, %.2fm elapsed" % (utils.minelapsed(self.start)))
+		pool.close()
+		pool.join()
 		return score_mat 
 
 	def dict_by_ids(self, df, ids, para_sep = None, parser = None):
@@ -149,7 +151,7 @@ class MultiComparisons():
 			self.parser = parser 
 		# MULTIPROCESSING: create and distribute asynchronous tasks to read docs
 		tasks = [df.loc[df["id"] == i, ["id", "text", "doc"]].iloc[0] for i in ids]
-		pool = mp.Pool(processes = min(mp.cpu_count() - 1, round(ndocs/50 + 1)))
+		pool = mp.Pool(processes = min(mp.cpu_count() - 2, round(ndocs/50 + 1)))
 		results = pool.imap(self.reader, tasks)
 		docs = {}
 		for i, doc in enumerate(results):
