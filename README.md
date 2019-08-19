@@ -11,9 +11,9 @@ We believe that the number of original news articles that exists in the informat
 ### Question 2: How do duplicated articles evolve from their original texts as they move through the chain of publishers?
 *Goal*: investigate whether or not there are consistent differences in the changes made to article texts (e.g. the changing valence of statements based on topic, etc.) based on the known political leaning of the publishers that repost the articles. 
 
-
+---
 #### Algorithms
-_NOTE: This section provides a general overview of the algorithms used and should not be referred to as a comprehensive guide. For more specific implementation details, please refer to the [code](scripts)_
+_NOTE: This section provides a general overview of the algorithms used and should not be referred to as a comprehensive guide. For more specific implementation details, please refer to the code available in the [scripts](scripts) folder_
 - [ ] _Article Similarity Detection_ (python [scripts/OneDayDuplicationDetection.py](scripts/OneDayDuplicationDetection.py) [YYYYmmdd])
      - [x] Parsing Documents [scripts/documents.py](scripts/documents.py)
     ```
@@ -25,6 +25,10 @@ _NOTE: This section provides a general overview of the algorithms used and shoul
       - If parser == "spacy" (default), also creates an average Document vector from [paragraph-specific word vectors learned by the "en_core_web_md" spacy model](https://spacy.io/usage/vectors-similarity) 
     ```
      - [x] Computing Article Similarity Scores [scripts/comparisons.py](scripts/comparisons.py)
+     Class | Function | Description
+     -- | ---- | ----
+     DocumentComparisons(thresh_jaccard = .5, thresh_same_sent = .9) | jaccard_index(bow_a, bow_b) | Computes the jaccard index of two bow dictionaries, defined as |intersection|/|union|
+      | compute_jaccard_matrix(source, target) | Takes two articles and computes 
     ```
     class DocumentComparisons(thresh_jaccard = .5, thresh_same_sent = .9)
       - jaccard_index(bow_a, bow_b):
