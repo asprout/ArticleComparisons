@@ -53,6 +53,8 @@ _NOTE: This section provides a general overview of the algorithms used and shoul
   - `class MultiComparisons()`
     - `run(docs):`
       - Given a dictionary of Documents, uses the Python multiprocessing module to construct a symmetrix matrix of pairwise Document similarity scores. 
+      - On a regular user laptop with multiprocessing.cpu_count() == 8, Parsing and comparing 1000 articles (~500k comparisons) takes <10m, and <3m for 500 articles. 
+      - Using nerds1, estimate the time to process n articles with: `(n/1000)^2 * 8.5`
   
 - ***Article Origin Detection***
 
