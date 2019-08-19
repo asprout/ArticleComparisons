@@ -10,8 +10,8 @@ We believe that the number of original news articles that exists in the informat
 
 _Algorithms_
 - [ ] Article Similarity Detection python [scripts/OneDayDuplicationDetection.py](scripts/OneDayDuplicationDetection.py) [YYYYmmdd]
-      - [x] Parsing Documents 
-            - Using 
+  - [x] Parsing Documents
+    - Using 
    
 ### Question 2: How do duplicated articles evolve from their original texts as they move through the chain of publishers?
 *Goal*: investigate whether or not there are consistent differences in the changes made to article texts (e.g. the changing valence of statements based on topic, etc.) based on the known political leaning of the publishers that repost the articles. 
