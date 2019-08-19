@@ -12,7 +12,7 @@ We believe that the number of original news articles that exists in the informat
 
 ---
 ### Algorithms
-_NOTE: This section provides a general overview of the algorithms used and should not be referred to as a comprehensive guide. For specific implementation details and useful visualization/debugging/other functionalities, please refer to the code available in the [scripts](scripts) folder_
+_NOTE: This section provides a general overview. For more specific implementation details and useful visualization/debugging/other functionalities, please refer to the code available in the [scripts](scripts) folder_
 
 - ***Article Similarity Detection*** (python [scripts/OneDayDuplicationDetection.py](scripts/OneDayDuplicationDetection.py) [YYYYmmdd])
      - [x] Parsing Documents ([scripts/documents.py](scripts/documents.py))
