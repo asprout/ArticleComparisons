@@ -9,7 +9,7 @@ We believe that the number of original news articles that exists in the informat
    - In the U.S., there are recognized to be the Associated Press (AP) and Reuters
 
 _Algorithms_
-- [ ] Article Similarity Detection python [scripts/OneDayDuplication.py (github.com/asprout/ArticleComparisons/tree/master/scripts/OneDayDuplication.py) [YYYYmmdd]
+- [ ] Article Similarity Detection python [scripts/OneDayDuplication.py](github.com/asprout/ArticleComparisons/tree/master/scripts/OneDayDuplication.py) [YYYYmmdd]
       - [x] Parsing Documents 
             - Using 
    
