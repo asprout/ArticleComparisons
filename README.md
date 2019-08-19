@@ -1,5 +1,4 @@
-# Provenance
-## Tracing the origins and production of news. 
+## Provenance: _Tracing the origins and production of news._
 
 ### Question 1: How much original news is being produced?
 *Goal*: identify the percentage of "unique" articles that are published on any given day, and how this number changes based on the type of publishers and events sampled. 
@@ -43,7 +42,21 @@ _NOTE: This section provides a general overview of the algorithms used and shoul
       - jaccard_score(source, target):
         - Computes the similarity score between two documents as the weighted sum of the jaccard and match matrices.
     ```
+    - [x] Computing Unique Article Percentages [scripts/comparisons.py](scripts/comparisons.py)
+    ```
+    class DuplicationDetection(thresh_jaccard = .5, thresh_same_sent = .9, thresh_same_doc = .25)
+      - similarity_mat(doc_dict):
+        - Given a dictionary of Documents, constructs a symmetric matrix of pairwise Document similarity scores 
+        - HEURISTIC: If document vectors exist, simply computes the similarity score as 0 for any document pairs for which the cosine similarity score of their vectors is below a certain threshold. 
+      - cluster_articles(sim_mat):
+        - Constructs a distance matrix as 1 - sim_mat, and runs agglomerative hierarchical clustering with single linkage on the articles.
+      - prop_unique_clusters(thresh_same_doc)
+        - Given an article pair similarity threshold (default .25), returns the percentage of unique articles calculated as the number of unique clusters when the clustering tree computed by cluster_articles is cut at a height of 1 - thresh_same_doc (i.e. two articles are grouped in the same cluster if their similarity score meets thresh_same_doc)
+    ```
   - [x] Multiprocessing [scripts/comparisonsmachine.py](scripts/comparisonsmachine.py)
+  `class MultiComparisons()`
+    - run(docs):
+      - Given a dictionary of Documents, uses the Python multiprocessing module to construct a symmetrix matrix of pairwise Document similarity scores. 
   
 - [ ] Article Origin Detection 
 
