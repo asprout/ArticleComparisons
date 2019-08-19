@@ -14,18 +14,18 @@ We believe that the number of original news articles that exists in the informat
 ### Algorithms
 _NOTE: This section provides a general overview of the algorithms used and should not be referred to as a comprehensive guide. For specific implementation details and useful visualization/debugging/other functionalities, please refer to the code available in the [scripts](scripts) folder_
 
-- [ ] _Article Similarity Detection_ (python [scripts/OneDayDuplicationDetection.py](scripts/OneDayDuplicationDetection.py) [YYYYmmdd])
-     - [x] Parsing Documents [scripts/documents.py](scripts/documents.py)
+- _Article Similarity Detection_ (python [scripts/OneDayDuplicationDetection.py](scripts/OneDayDuplicationDetection.py) [YYYYmmdd])
+     - [x] Parsing Documents ([scripts/documents.py](scripts/documents.py))
      - `class Document(raw_text, para_sep = "###", parser = "spacy", text_encoding = "utf8", text_language = "english")`
        - Identifies paragraphs in the raw text by separating by para_sep, filtering out paragraphs that contain < 4 words or ALL CAPS.
        - Creates lists of sentences and their corresponding bag-of-word (bow) dictionaries ({"token": count})
          - Keeps only the first instance of every sentence, and discards duplicates (repeated sentences OR bow's)
          - Tokens are lowercase lemmatized ("spacy") or stemmed ("nltk") words, identified by the repective parser, with at least one alphanumeric character.
       - If parser == "spacy" (default), also creates an average Document vector from [paragraph-specific word vectors learned by the "en_core_web_md" spacy model](https://spacy.io/usage/vectors-similarity) 
-    - [x] Computing Article Similarity Scores [scripts/comparisons.py](scripts/comparisons.py)
+    - [x] Computing Article Similarity Scores ([scripts/comparisons.py](scripts/comparisons.py))
     - `class DocumentComparisons(thresh_jaccard = .5, thresh_same_sent = .9)`
-      - thresh_jaccard: The minimum Jaccard index of a pair of sentences to be considered a possible match
-      - thresh_same_sent: The minimum Jaccard index of a pair of sentences to be considered a definite match  
+      - `thresh_jaccard`: The minimum Jaccard index of a pair of sentences to be considered a possible match
+      - `thresh_same_sent`: The minimum Jaccard index of a pair of sentences to be considered a definite match  
       - `jaccard_index(bow_a, bow_b):`
         - Computes the jaccard index of two bow dictionaries, defined as |intersection|/|union|
       - `compute_jaccard_matrix(source, target):`
@@ -39,7 +39,7 @@ _NOTE: This section provides a general overview of the algorithms used and shoul
           - Otherwise, normalizes the corresponding row (/column) in the match matrix to sum to 1. 
       - `jaccard_score(source, target):`
         - Computes the similarity score between two documents as the weighted sum of the jaccard and match matrices.
-    - [x] Computing Unique Article Percentages [scripts/comparisons.py](scripts/comparisons.py)
+    - [x] Computing Unique Article Percentages ([scripts/comparisons.py](scripts/comparisons.py))
     - `class DuplicationDetection(thresh_jaccard = .5, thresh_same_sent = .9, thresh_same_doc = .25)`
       - `similarity_mat(doc_dict):`
         - Given a dictionary of Documents, constructs a symmetric matrix of pairwise Document similarity scores 
@@ -49,11 +49,11 @@ _NOTE: This section provides a general overview of the algorithms used and shoul
       - `prop_unique_clusters(thresh_same_doc)`
         - Given an article pair similarity threshold (default .25), returns the percentage of unique articles calculated as the number of unique clusters when the clustering tree computed by cluster_articles is cut at a height of 1 - thresh_same_doc (i.e. two articles are grouped in the same cluster if their similarity score meets thresh_same_doc)
         
-  - [x] Multiprocessing [scripts/comparisonsmachine.py](scripts/comparisonsmachine.py)
+  - [x] Multiprocessing ([scripts/comparisonsmachine.py](scripts/comparisonsmachine.py))
   - `class MultiComparisons()`
     - `run(docs):`
       - Given a dictionary of Documents, uses the Python multiprocessing module to construct a symmetrix matrix of pairwise Document similarity scores. 
   
-- [ ] Article Origin Detection 
+- _Article Origin Detection_
 
 
