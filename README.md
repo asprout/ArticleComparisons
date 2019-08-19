@@ -14,9 +14,9 @@ We believe that the number of original news articles that exists in the informat
 ### Algorithms
 _NOTE: This section provides a general overview of the algorithms used and should not be referred to as a comprehensive guide. For specific implementation details and useful visualization/debugging/other functionalities, please refer to the code available in the [scripts](scripts) folder_
 
-- _Article Similarity Detection_ (python [scripts/OneDayDuplicationDetection.py](scripts/OneDayDuplicationDetection.py) [YYYYmmdd])
+- ***Article Similarity Detection*** (python [scripts/OneDayDuplicationDetection.py](scripts/OneDayDuplicationDetection.py) [YYYYmmdd])
      - [x] Parsing Documents ([scripts/documents.py](scripts/documents.py))
-     - `class Document(raw_text, para_sep = "###", parser = "spacy", text_encoding = "utf8", text_language = "english")`
+     - `class Document(raw_text, para_sep = "###", parser = "spacy")`
        - Identifies paragraphs in the raw text by separating by para_sep, filtering out paragraphs that contain < 4 words or ALL CAPS.
        - Creates lists of sentences and their corresponding bag-of-word (bow) dictionaries ({"token": count})
          - Keeps only the first instance of every sentence, and discards duplicates (repeated sentences OR bow's)
@@ -30,12 +30,12 @@ _NOTE: This section provides a general overview of the algorithms used and shoul
         - Computes the jaccard index of two bow dictionaries, defined as |intersection|/|union|
       - `compute_jaccard_matrix(source, target):`
         - Takes two Documents with s and t sentences and constructs a s by t matrix of pairwise sentence Jaccard indices. 
-        - HEURISTIC: Simply computes the Jaccard index as 0 for any target sentence that does not fall in the required word length bounds to meet thresh_jaccard 
+        - _HEURISTIC_: Simply computes the Jaccard index as 0 for any target sentence that does not fall in the required word length bounds to meet thresh_jaccard 
       - `compute_match_matrix(jaccard_matrix):`
         - Takes a jaccard matrix and constructs a match (weight) matrix of the same size. 
         - Initializes the match matrix elements as 1 if the corresponding jaccard matrix element meets thresh_jaccard, else 0.
         - For each non-zero row (/column) in the jaccard matrix
-          - If the maximum element at [i, j] meets thresh_same_sent, considers sentences i and j a definite match by setting match_matrix[i, j] to 1 and all other elements in the same row (i) and column (j) to 0.
+          - If the maximum element at [i, j] meets thresh_same_sent, considers sentences i and j a definite match by setting match_matrix[i, j] to 1 and all other elements in the same row and column to 0.
           - Otherwise, normalizes the corresponding row (/column) in the match matrix to sum to 1. 
       - `jaccard_score(source, target):`
         - Computes the similarity score between two documents as the weighted sum of the jaccard and match matrices.
@@ -43,7 +43,7 @@ _NOTE: This section provides a general overview of the algorithms used and shoul
     - `class DuplicationDetection(thresh_jaccard = .5, thresh_same_sent = .9, thresh_same_doc = .25)`
       - `similarity_mat(doc_dict):`
         - Given a dictionary of Documents, constructs a symmetric matrix of pairwise Document similarity scores 
-        - HEURISTIC: If document vectors exist, simply computes the similarity score as 0 for any document pairs for which the cosine similarity score of their vectors is below a certain threshold. 
+        - _HEURISTIC_: If document vectors exist, simply computes the similarity score as 0 for any document pairs for which the cosine similarity score of their vectors is below a certain threshold. 
       - `cluster_articles(sim_mat):`
         - Constructs a distance matrix as 1 - sim_mat, and runs agglomerative hierarchical clustering with single linkage on the articles.
       - `prop_unique_clusters(thresh_same_doc)`
@@ -54,6 +54,6 @@ _NOTE: This section provides a general overview of the algorithms used and shoul
     - `run(docs):`
       - Given a dictionary of Documents, uses the Python multiprocessing module to construct a symmetrix matrix of pairwise Document similarity scores. 
   
-- _Article Origin Detection_
+- ***Article Origin Detection***
 
 
