@@ -208,3 +208,8 @@ if __name__=='__main__': # Test multi and serial processing speeds
 	### with 1000 docs (500,000 comparisons)
 	# mp: 1m to load, 9m total 
 	# serial: 2m to load, 20m total 
+
+	# Testing with article duplication python scripts:
+	# 4551 articles: 172m (~3 hours)
+	# 2033 articles: 35m
+	# 1215 articles: 12m 

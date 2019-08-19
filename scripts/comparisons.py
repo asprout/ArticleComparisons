@@ -85,7 +85,7 @@ class DocumentComparisons:
         return self.jaccard_matrix
 
     def compute_match_matrix(self, jac_mat = None):
-        ''' Symmetric matrix matching pairwise sentences between two documents:
+        ''' Matrix matching pairwise sentences between two documents:
         1. Creates a match matrix: 1 if pairwise Jaccards >= thres_jaccard, else 0
         2. Weighs match matrix. For each sentence in source:
             2a. If the highest match > thresh_same_sent, sets match to 1 and all 
