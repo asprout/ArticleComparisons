@@ -1,4 +1,4 @@
-import os
+import os, sys 
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt 
@@ -13,19 +13,29 @@ import comparisonsmachine
 if __name__=='__main__':
     start = time.time()
     data_folder = "data"
-    para_sep = "###"
+    results_folder = os.path.join("..", "results")
+    para_sep = "\n"
     parser = "spacy"
     thresh_jaccard = .5
     thresh_same_sent = .9
     thresh_same_doc = .25
-    article_df = pd.read_pickle(os.path.join(data_folder, "article_df_20180715"))
+
+    date = "20190601"
+    if len(sys.argv) > 1:
+        date = sys.argv[1]
+
+    article_df_path = os.path.join("..", data_folder, "article_df_" + date)
+    try:
+        article_df = pd.read_pickle(article_df_path)
+    except:
+        sys.exit(f"Could not read article dataframe from {article_df_path}. \nPlease check that your provided date ({date}) is formatted as YYYYmmdd.")
     
     events = [event for event in np.unique(article_df["event"]) if not np.isnan(event)]
     n = [len(article_df.loc[article_df["event"] == event]) for event in events]
     print("Event sizes: ", n)
 
     try:
-        results_df = pd.read_csv("results_20180715_clusters_temp.csv")
+        results_df = pd.read_csv(os.path.join(results_folder, "results_" + date + "_clusters_temp.csv"))
     except:
         results_df = pd.DataFrame(list(zip(events, n)), columns = ["event", "n"])
         results_df["unique25"] = np.nan
@@ -63,14 +73,14 @@ if __name__=='__main__':
         
         results_df.loc[i, "n_good"] = len(good_inds)
         try:
-            results_df.to_csv("results_20180715_clusters_temp.csv", index = False)
+            results_df.to_csv(os.path.join(results_folder, "results_" + date + "_clusters_temp.csv"), index = False)
         except:
             try:
-                results_df.to_csv("results_20180715_clusters_temp2.csv", index = False)
+                results_df.to_csv(os.path.join(results_folder, "results_" + date + "_clusters_temp2.csv"), index = False)
             except:
                 print("Can't write to csv")
         print(results_df.loc[i])
-        print("Completed comparisons for Event %d of size %d, %.2fm elapsed\n" % (i, n[i], utils.minelapsed(start)))
+        print("Completed comparisons for Event %d of size %d, %.2fm elapsed" % (i, n[i], utils.minelapsed(start)))
         i = i - 1
 
-    results_df.to_csv("results_20180715_clusters.csv", index = False)
+    results_df.to_csv(results_folder, index = False)
