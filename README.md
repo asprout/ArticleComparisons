@@ -13,7 +13,7 @@ We believe that the number of original news articles that exists in the informat
 
 ---
 #### Algorithms
-_NOTE: This section provides a general overview of the algorithms used and should not be referred to as a comprehensive guide. For more specific implementation details, please refer to the code available in the [scripts](scripts) folder_
+_NOTE: This section provides a general overview of the algorithms used and should not be referred to as a comprehensive guide. For specific implementation details and useful visualization/debugging/other functionalities, please refer to the code available in the [scripts](scripts) folder_
 - [ ] _Article Similarity Detection_ (python [scripts/OneDayDuplicationDetection.py](scripts/OneDayDuplicationDetection.py) [YYYYmmdd])
      - [x] Parsing Documents [scripts/documents.py](scripts/documents.py)
     ```
@@ -25,16 +25,23 @@ _NOTE: This section provides a general overview of the algorithms used and shoul
       - If parser == "spacy" (default), also creates an average Document vector from [paragraph-specific word vectors learned by the "en_core_web_md" spacy model](https://spacy.io/usage/vectors-similarity) 
     ```
      - [x] Computing Article Similarity Scores [scripts/comparisons.py](scripts/comparisons.py)
-     Class | Function | Description
-     -- | ---- | ----
-     DocumentComparisons(thresh_jaccard = .5, thresh_same_sent = .9) | jaccard_index(bow_a, bow_b) | Computes the jaccard index of two bow dictionaries, defined as |intersection|/|union|
-      | compute_jaccard_matrix(source, target) | Takes two articles and computes 
     ```
     class DocumentComparisons(thresh_jaccard = .5, thresh_same_sent = .9)
+      - thresh_jaccard: The minimum Jaccard index of a pair of sentences to be considered a possible match
+      - thresh_same_sent: The minimum Jaccard index of a pair of sentences to be considered a definite match  
       - jaccard_index(bow_a, bow_b):
         - Computes the jaccard index of two bow dictionaries, defined as |intersection|/|union|
       - compute_jaccard_matrix(source, target):
-        - Takes two articles and computes 
+        - Takes two Documents with s and t sentences and constructs a s by t matrix of pairwise sentence Jaccard indices. 
+        - HEURISTIC: Simply computes the Jaccard index as 0 for any target sentence that does not fall in the required word length bounds to meet thresh_jaccard 
+      - compute_match_matrix(jaccard_matrix):
+        - Takes a jaccard matrix and constructs a match (weight) matrix of the same size. 
+        - Initializes the match matrix elements as 1 if the corresponding jaccard matrix element meets thresh_jaccard, else 0.
+        - For each non-zero row (/column) in the jaccard matrix
+          - If the maximum element at [i, j] meets thresh_same_sent, considers sentences i and j a definite match by setting match_matrix[i, j] to 1 and all other elements in the same row (i) and column (j) to 0.
+          - Otherwise, normalizes the corresponding row (/column) in the match matrix to sum to 1. 
+      - jaccard_score(source, target):
+        - Computes the similarity score between two documents as the weighted sum of the jaccard and match matrices.
     ```
   - [x] Multiprocessing [scripts/comparisonsmachine.py](scripts/comparisonsmachine.py)
   
