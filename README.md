@@ -54,7 +54,7 @@ _NOTE: This section provides a general overview of the algorithms used and shoul
         - Given an article pair similarity threshold (default .25), returns the percentage of unique articles calculated as the number of unique clusters when the clustering tree computed by cluster_articles is cut at a height of 1 - thresh_same_doc (i.e. two articles are grouped in the same cluster if their similarity score meets thresh_same_doc)
     ```
   - [x] Multiprocessing [scripts/comparisonsmachine.py](scripts/comparisonsmachine.py)
-  `class MultiComparisons()`
+  ```class MultiComparisons()```
     - run(docs):
       - Given a dictionary of Documents, uses the Python multiprocessing module to construct a symmetrix matrix of pairwise Document similarity scores. 
   
