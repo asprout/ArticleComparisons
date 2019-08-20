@@ -1,4 +1,4 @@
-## Provenance: _Tracing the origins and production of news._
+## Provenance: _Tracing the origin and production of news._
 
 ### Question 1: How much original news is being produced?
 *Goal*: identify the percentage of "unique" articles that are published on any given day, and how this number changes based on the type of publishers and events sampled. 
