@@ -21,7 +21,7 @@ _NOTE: This section provides a general overview. For more specific implementatio
        - Creates lists of sentences and their corresponding bag-of-word (bow) dictionaries ({"token": count})
          - Keeps only the first instance of every sentence, and discards duplicates (repeated sentences OR bow's)
          - Tokens are lowercase lemmatized ("spacy") or stemmed ("nltk") words, identified by the repective parser, with at least one alphanumeric character.
-      - If parser == "spacy" (default), also creates an average Document vector from [paragraph-specific word vectors learned by the "en_core_web_md" spacy model](https://spacy.io/usage/vectors-similarity) 
+       - If parser == "spacy" (default), also creates an average Document vector from [paragraph-specific word vectors learned by the "en_core_web_md" spacy model](https://spacy.io/usage/vectors-similarity) 
     - [x] Computing Article Similarity Scores ([scripts/comparisons.py](scripts/comparisons.py))
     - `class DocumentComparisons(thresh_jaccard = .5, thresh_same_sent = .9)`
       - `thresh_jaccard`: The minimum Jaccard index of a pair of sentences to be considered a possible match
