@@ -1,10 +1,11 @@
+import matplotlib.pyplot as plt
 from scipy.cluster import hierarchy
 from scipy.spatial.distance import squareform
 import numpy as np 
 import time
 # Article comparisons modules
-import documents
-import utils 
+from . import utils 
+from . import documents
 
 class DocumentComparisons:
     # A class to make pairwise document similarity comparisons 
@@ -74,6 +75,7 @@ class DocumentComparisons:
         self.last_source = source
         self.last_target = target 
         self.jaccard_matrix = jac_mat
+        self.jaccard_matches = None
         return self.jaccard_matrix
 
     def get_jaccard_matrix(self, source = None, target = None):
@@ -116,6 +118,15 @@ class DocumentComparisons:
             all other indices in the same row and column to 0
         otherwise, divides by the sum such that the normalized sum is 1
         '''
+        for i in np.where(np.max(jaccards, axis = 1) >= self.thresh_same_sent)[0]:
+            argmax = np.argmax(jaccards[i, :])
+            matches[i, :] = [0] * matches.shape[1]
+            matches[:, argmax] = [0] * matches.shape[0]
+            matches[i, argmax] = 1 
+        rowsums = np.sum(matches, axis = 1)
+        for i in np.where(rowsums > 0)[0]:
+            matches[i, :] = matches[i, :] / rowsums[i]
+        """
         rowsums = np.sum(matches, axis = 1)
         for i in np.where(rowsums > 0)[0]:
             argmax = np.argmax(jaccards[i, :]) 
@@ -125,6 +136,7 @@ class DocumentComparisons:
                 matches[i, argmax] = 1
             elif rowsums[i] > 1:
                 matches[i, :] = matches[i, :] / rowsums[i]
+        """
         return matches
 
     def jaccard_score(self, source = None, target = None):
@@ -147,13 +159,11 @@ class DocumentComparisons:
             matches = self.get_match_matrix(jac_mat)
         else:
             matches = self.get_match_matrix()
-        source_sents = self.last_source.get_sentences()
-        target_sents = self.last_target.get_sentences()
         for i in range(matches.shape[0]):
             if np.sum(matches[i, :] > 0):
-                print("S", i, ":", source_sents[i], "\n")
+                print("S", i, ":", self.last_source.get_sentence(i), "\n")
                 for j in np.nonzero(matches[i, :])[0]:
-                    print("\tT", j, np.round(jac_mat[i, j], 2), ":", target_sents[j], "\n")
+                    print("\tT", j, np.round(jac_mat[i, j], 2), ":", self.last_target.get_sentence(j), "\n")
 
 class DuplicationDetection(DocumentComparisons):
     ''' A specific DocumentComparisons instance for dealing with articles
@@ -165,13 +175,6 @@ class DuplicationDetection(DocumentComparisons):
         self.sim_mat = None # pairwise document similarity score matrix 
         self.clusters = None # list of clusters, indexed by document
         self.hclust = None # hierarchical agglo. clustering object
-
-    def readArticles(self, path):
-        """ Reads df of articles from the given path, and adds a column to store the Doc 
-        """
-        article_df = pd.read_csv(path)
-        article_df["doc"] = None 
-        return article_df 
 
     def dict_by_ids(self, df, ids, para_sep = "###", parser = None):
         """ Given a dataframe of articles and a list of article ids, 
@@ -188,7 +191,7 @@ class DuplicationDetection(DocumentComparisons):
             doc_dict[doc_id] = df.loc[row, "doc"].iloc[0]
         return doc_dict
 
-    def similarity_mat(self, docs = None, progress = True):
+    def similarity_mat(self, docs = None, progress = True, ordered = False):
         ''' Returns stored matrix of pairwise document match stores, 
         or computes and returns new matrix if docs is not None
         '''
@@ -198,7 +201,9 @@ class DuplicationDetection(DocumentComparisons):
         if docs is None:
             docs = self.docs
 
-        docids = np.sort([i for i in docs.keys()]) # Order by docids 
+        docids = [i for i in docs.keys()]
+        if ordered:
+            docids = np.sort(docids)
         ndocs = len(docids)
         sim_mat = np.zeros((ndocs, ndocs))
 

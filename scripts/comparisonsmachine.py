@@ -4,9 +4,9 @@ import pandas as pd
 import time
 import os
 # Article comparisons modules 
-import documents # document loading classes
-import comparisons # serial processing classes
-import utils # helper functions 
+from . import utils # helper functions 
+from . import documents # document loading classes
+from . import comparisons # serial processing classes
 
 class DocumentComparer:
 	"""
@@ -61,15 +61,14 @@ class DocumentComparer:
 		return self.jaccard_matches
 
 	def weigh_matches(self, matches, jaccards):
+		for i in np.where(np.max(jaccards, axis = 1) >= self.thresh_same_sent)[0]:
+			argmax = np.argmax(jaccards[i, :])
+			matches[i, :] = [0] * matches.shape[1]
+			matches[:, argmax] = [0] * matches.shape[0]
+			matches[i, argmax] = 1 
 		rowsums = np.sum(matches, axis = 1)
 		for i in np.where(rowsums > 0)[0]:
-			argmax = np.argmax(jaccards[i, :]) 
-			if jaccards[i, argmax] >= self.thresh_same_sent:
-				matches[i, :] = [0] * matches.shape[1]
-				matches[:, argmax] = [0] * matches.shape[0]
-				matches[i, argmax] = 1
-			elif rowsums[i] > 1:
-				matches[i, :] = matches[i, :] / rowsums[i]
+			matches[i, :] = matches[i, :] / rowsums[i]
 		return matches
 
 	def jaccard_score(self, source, target):
@@ -115,8 +114,10 @@ class MultiComparisons():
 			return self.comparer.jaccard_score(doc1, doc2)
 		return 0
 
-	def similarity_mat(self, docs, progress = True):
-		docids = np.sort([i for i in docs.keys()]) # Order by docid
+	def similarity_mat(self, docs, progress = True, ordered = True):
+		docids = [i for i in docs.keys()]
+		if ordered:
+			docids = np.sort(docids)
 		ndocs = len(docids)
 		score_mat = np.zeros((ndocs, ndocs)) # Initialize score matrix 
 		# MULTIPROCESSING: create and distribute asynchronous document pair comparison tasks

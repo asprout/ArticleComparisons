@@ -1,8 +1,24 @@
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 import time 
 
 # Helper functions
+
+def isalnum(str):
+    # Returns true if any character of the string is alphanumeric
+    for i in str:
+        if i.isalnum(): 
+            return True
+    return False
+
+def readArticles(path):
+    """ Reads df of articles from the given path, and adds a column to store the Doc 
+    """
+    article_df = pd.read_csv(path)
+    article_df["doc"] = None 
+    return article_df 
+
 
 def notNone(lst):
     """ returns True if at least one item is not None """

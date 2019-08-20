@@ -8,12 +8,7 @@ import nltk # tokenize words and sentences based on language
 NLP = spacy.load("en_core_web_md", disable = ['tagger', 'ner'])
 # May need to run: python -m spacy download en_core_web_md (or sm for small)
 
-def isalnum(str):
-    # Returns true if any character of the string is alphanumeric
-    for i in str:
-        if i.isalnum(): 
-            return True
-    return False
+from . import utils
 
 class Document:
     # Document parsing parameters 
@@ -103,7 +98,7 @@ class Document:
                 sent_para_map.append(i)
                 # parse tokens 
                 tokens = [t.lemma_ for t in s_span] if self.stem else [t.text for t in s_span]
-                tokens = dict(Counter([t.lower() for t in tokens if isalnum(t)]))
+                tokens = dict(Counter([t.lower() for t in tokens if utils.isalnum(t)]))
                 if not self.clean or (len(tokens) > 0 and tokens not in bow_sentences):
                     bow_sentences.append(tokens)
                     bow_sent_map.append(len(sentences) - 1)
@@ -156,7 +151,7 @@ class Document:
             if self.stem:
                 tokens = [ps.stem(token) for token in tokens]
             # count of tokens in a sentence, excluding non-alphanumeric words 
-            tokens = dict(Counter([token.lower() for token in tokens if isalnum(token)]))
+            tokens = dict(Counter([token.lower() for token in tokens if utils.isalnum(token)]))
             if len(tokens) > 0 and (tokens not in bow_sentences or (not self.clean)):
                 bow_sentences.append(tokens)
                 bow_sent_map.append(i)
@@ -170,6 +165,9 @@ class Document:
         if not raw:
             return [self.sentences[i] for i in self.bow_sent_map]
         return self.sentences
+
+    def get_sentence(self, bow_ind):
+        return self.sentences[self.bow_sent_map[bow_ind]]
 
     def get_bow_sentences(self):
         return self.bow_sentences
