@@ -11,7 +11,7 @@ We believe that the number of original news articles that exists in the informat
 *Goal*: investigate whether or not there are consistent differences in the changes made to article texts (e.g. the changing valence of statements based on topic, etc.) based on the known political leaning of the publishers that repost the articles. 
 
 ---
-### Algorithms
+### Scripts
 _NOTE: This section provides a general overview. For more specific implementation details and useful visualization/debugging/other functionalities, please refer to the code available in the [scripts](scripts) folder_
 
 - ***Article Similarity Detection*** (python [scripts/OneDayDuplicationDetection.py](scripts/OneDayDuplicationDetection.py) [YYYYmmdd])
