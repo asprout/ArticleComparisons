@@ -5,19 +5,18 @@ import nltk # tokenize words and sentences based on language
 # Following line may be necessary to run nltk calls:
 # nltk.download('punkt')
 # For spacy:
-NLP = spacy.load("en_core_web_md", disable = ['tagger', 'ner'])
+NLP = spacy.load("en_core_web_md", disable = ['tagger'])
 # May need to run: python -m spacy download en_core_web_md (or sm for small)
 
 from . import utils
 
 class Document:
-    # Document parsing parameters 
-    clean = True # removes 'bad' paragraphs and duplicate sentences 
-    min_para = 4 # minimum number of words in paragraph
-    stem = True # Should words be stemmed?
-
     def __init__(self, text, para_sep = "###", parser = "spacy",
                        text_encoding = "utf8", text_language = "english"):
+        # Document parsing parameters (should NOT be changed except for dev purposes!)
+        self.clean = True # removes 'bad' paragraphs and duplicate sentences 
+        self.min_para = 4 # minimum number of words in paragraph
+        self.stem = True # Should words be stemmed?
         # Document-specific Parameters 
         self.para_sep = para_sep
         self.text_encoding = text_encoding
@@ -27,6 +26,7 @@ class Document:
         self.sentences = None # List of sentence strings 
         self.sent_para_map = None # List of corresponding paragraph numbers of each sentence       
         self.bow_sentences = None # List of bag-of-word dictionaries per sentence 
+        self.sent_entities = None # List of entities per sentence 
         self.bow_sent_map = None # List of corresponding sentence indices for BOW dictionaries
         self.bow_sent_lens = None # List of lengths (number of words) of each bow sentence 
         if parser == "spacy":
@@ -54,6 +54,7 @@ class Document:
         sentences = []
         sent_para_map = []
         bow_sentences = []
+        sent_entities = []
         bow_sent_map = []
         bow_sent_lens = []
         vectors = []
@@ -101,12 +102,16 @@ class Document:
                 tokens = dict(Counter([t.lower() for t in tokens if utils.isalnum(t)]))
                 if not self.clean or (len(tokens) > 0 and tokens not in bow_sentences):
                     bow_sentences.append(tokens)
+                    sent_entities.append([ent.lemma_.lower() for ent in s_span.ents if (
+                        ent.label_ in ['PERSON', 'GPE', 'ORG'] or 
+                        ent.label_ == "DATE" and len(ent.text) >= 10)])
                     bow_sent_map.append(len(sentences) - 1)
                     bow_sent_lens.append(len(tokens))
         self.vec = np.array(vectors).mean(axis = 0) if len(vectors) > 0 else None
         self.sentences = np.array(sentences)
         self.sent_para_map = np.array(sent_para_map)
         self.bow_sentences = np.array(bow_sentences)
+        self.sent_entities = np.array(sent_entities)
         self.bow_sent_map = np.array(bow_sent_map)
         self.bow_sent_lens = np.array(bow_sent_lens)
         return self.bow_sentences

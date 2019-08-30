@@ -23,13 +23,16 @@ class DocumentComparer:
 		if thresh_same_sent is not None: # Jaccard index to be considered a definite match
 			self.thresh_same_sent = thresh_same_sent
 
-	def jaccard_index(self, bow_a, bow_b):
+	def jaccard_index(self, bow_a, bow_b, union_subset = False):
 		# Jaccard(A, B) = |A and B|/|A or B|
 		set_a = set(bow_a)
 		set_b = set(bow_b)
 		intsec_words = set_a.intersection(set_b)
 		intsec = len(intsec_words)
-		union = len(set_a) + len(set_b) - intsec
+		if union_subset:
+			union = min(len(set_a), len(set_b))
+		else:
+			union = len(set_a) + len(set_b) - intsec
 		return float(intsec / max(1.0, union))
 
 	def compute_jaccard_matrix(self, source, target):
@@ -45,23 +48,26 @@ class DocumentComparer:
 			return None # No valid sentences
 
 		jac_mat = np.zeros((source_n, target_n))
+		entities_matrix = np.zeros((source_n, target_n))
         # only consider sentences that are within a certain length of each other
 		for i in range(source_n):
 			candidates = np.where((target_lens >= source_lens[i] * self.thresh_jaccard) & 
                                   (target_lens <= source_lens[i] / self.thresh_jaccard))[0]
 			for j in candidates:
 				jac_mat[i, j] = self.jaccard_index(source_bow[i], target_bow[j])
-		return jac_mat
+				if jac_mat[i, j] >= self.thresh_jaccard:
+					entities_matrix[i, j] = self.jaccard_index(source.sent_entities[i], target.sent_entities[j], union_subset = True)
+		return [jac_mat, entities_matrix]
+
 
 	def compute_match_matrix(self, jac_mat):
-		matches = 1.0 * (jac_mat >= self.thresh_jaccard)
+		matches = 1.0 * (jac_mat > self.thresh_jaccard)
 		matches = self.weigh_matches(matches, jac_mat) # Weigh rows (source sents)
 		matches = (self.weigh_matches(matches.T, jac_mat.T)).T # Weigh columns
-		self.jaccard_matches = matches
 		return self.jaccard_matches
 
 	def weigh_matches(self, matches, jaccards):
-		for i in np.where(np.max(jaccards, axis = 1) >= self.thresh_same_sent)[0]:
+		for i in np.where(np.max(jaccards, axis = 1) > self.thresh_same_sent)[0]:
 			argmax = np.argmax(jaccards[i, :])
 			matches[i, :] = [0] * matches.shape[1]
 			matches[:, argmax] = [0] * matches.shape[0]
@@ -71,18 +77,26 @@ class DocumentComparer:
 			matches[i, :] = matches[i, :] / rowsums[i]
 		return matches
 
-	def jaccard_score(self, source, target):
+	def jaccard_score(self, source, target, weighted = True):
 		jac_mat = self.compute_jaccard_matrix(source, target)
 		if jac_mat is None:
 			return 0 # No valid sentences in either source or target
 		match_mat = self.compute_match_matrix(jac_mat)
-		jac_score = np.sum(jac_mat * match_mat)
-		return jac_score / np.min(jac_mat.shape) # count snippets as duplicates
+
+		if not weighted:
+			jac_score = np.sum(jac_mat * match_mat)
+			return jac_score / np.min(jac_mat.shape) # count snippets as duplicates
+
+		s_weights = [min(i/5, 1) for i in source.bow_sent_lens]
+		t_weights = [min(i/5, 1) for i in target.bow_sent_lens]
+		weight_mat = np.reshape([[np.min([s, t]) for t in t_weights] for s in s_weights], [-1, len(t_weights)])
+		score = np.sum(jac_mat * match_mat * weight_mat)
+		return 0 if score == 0 else score/np.sum(np.max(weight_mat, axis = 1 - np.argmin(weight_mat.shape)))
 
 class MultiComparisons():
 	thresh_jaccard = .5
 	thresh_same_sent = .9 
-	thresh_same_doc = .25
+	thresh_same_doc = .5
 	para_sep = "###"
 	parser = None
 	comparer = DocumentComparer(thresh_jaccard, thresh_same_sent)
@@ -101,16 +115,37 @@ class MultiComparisons():
 			self.thresh_same_doc = thresh_same_doc 
 		self.comparer = DocumentComparer(self.thresh_jaccard, self.thresh_same_sent)
 
-	def reader(self, dfitems):
-		if dfitems["doc"] is None or self.parser is not None:
-			dfitems["doc"] = documents.Document(dfitems["text"], self.para_sep, self.parser)
-		return dfitems["doc"]
+	def badTextChecker(self, text):
+		text = text.lower()
+		if len(text) < 500:
+			return 0.5
+		elif len(text) < 1000 and utils.keywordsin(text):
+			return 1 
+		return 0
+
+	def filter_articles(self, df, ids = None):
+		self.start = time.time()
+		if ids is None:
+			df["paywall"] = np.nan # reset all 
+			ids = [i for i in range(len(df))]
+		# MULTIPROCESSING:create and distribute asynchronous tasks to analyze documents
+		tasks = [df.loc[df["id"] == i, "text"].iloc[0] for i in ids]
+		if self.pool is None:
+			pool = mp.Pool(processes = min(mp.cpu_count() - 2, round(ndocs/50 + 1)))
+		else:
+			pool = self.pool
+			self.pool = None 
+		results = pool.imap(self.badTextChecker, tasks)
+		for i, res in enumerate(results):
+			df.loc[df["id"] == ids[i], "paywall"] = res 
+		print("Checked article text validity via multiprocessing, %.2fm elapsed" % (utils.minelapsed(self.start)))
+		return docs 
 
 	def worker(self, docs):
 		doc1 = docs[0]
 		doc2 = docs[1]
 		# Only compare pairs with high vector cosine similarity 
-		if utils.cosinesim(doc1.vec, doc2.vec) >= 0:
+		if utils.cosinesim(doc1.vec, doc2.vec) >= 0.8:
 			return self.comparer.jaccard_score(doc1, doc2)
 		return 0
 
@@ -141,6 +176,11 @@ class MultiComparisons():
 		pool.close()
 		pool.join()
 		return score_mat 
+
+	def reader(self, dfitems):
+		if dfitems["doc"] is None or self.parser is not None:
+			dfitems["doc"] = documents.Document(dfitems["text"], self.para_sep, self.parser)
+		return dfitems["doc"]
 
 	def dict_by_ids(self, df, ids, para_sep = None, parser = None):
 		self.start = time.time()
@@ -173,8 +213,8 @@ if __name__=='__main__': # Test multi and serial processing speeds
 	print("Running comparisons with %d documents (%d comparisons)" % (n, (n * (n - 1))/2))
 
 	comparer = MultiComparisons()
-	comparer.setThresholds(thresh_jaccard = .5, thresh_same_sent = .9, thresh_same_doc = .25)
-	dd = comparisons.DuplicationDetection(thresh_jaccard = .5, thresh_same_sent = .9, thresh_same_doc = .25)
+	comparer.setThresholds(thresh_jaccard = .5, thresh_same_sent = .9, thresh_same_doc = .5)
+	dd = comparisons.DuplicationDetection(thresh_jaccard = .5, thresh_same_sent = .9, thresh_same_doc = .5)
 
 	article_dict = comparer.dict_by_ids(article_df, sample, "###", "spacy")
 	mat = comparer.run(article_dict)

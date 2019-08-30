@@ -3,6 +3,12 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import time 
 
+# global variables
+paywall_words = ["subscription", "subscribe", "full access", "digital access", "sign up", "unlimited access", 
+            "unlimited digital access", "log in", "login", "sign up", "create an account", 
+            "never miss a story", "for your first month", "to continue reading", "already a member",
+            "rely on advertising", "click to continue"]
+
 # Helper functions
 
 def isalnum(str):
@@ -11,6 +17,12 @@ def isalnum(str):
         if i.isalnum(): 
             return True
     return False
+
+def keywordsin(str, keywords = paywall_words):
+    for word in keywords:
+        if word in str:
+            return True
+    return False 
 
 def readArticles(path):
     """ Reads df of articles from the given path, and adds a column to store the Doc 
@@ -54,6 +66,8 @@ def display_mat(mat, normalize = False, xlabs = None, ylabs = None):
     """ Uses matplotlib to display mat; 
     if normalize is True, then coloring is normalized by range of values
     """
+    # Only display a subset if matrix is too large
+    mat = mat[0:min(50, mat.shape[0]), 0:min(50, mat.shape[1])]
     fig = plt.figure(figsize = (20, 20))
     ax = fig.add_subplot(111)
     if normalize:
