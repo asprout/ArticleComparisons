@@ -32,8 +32,10 @@ class DocumentComparisons:
             Jaccard(A, B) = |A and B|/|A or B|
             if counts is true, then uses word count, not just unique words
         '''
-        set_a = set(bow_a)
-        set_b = set(bow_b)
+        if bow_a is None or bow_b is None:
+            return -1 if union_subset else 0
+        set_a = set([a for a in bow_a if a is not None])
+        set_b = set([b for b in bow_b if b is not None])
         if (len(set_a) < 1 or len(set_b) < 1): 
             return -1 if union_subset else 0
         intsec_words = set_a.intersection(set_b)
@@ -259,7 +261,7 @@ class DuplicationDetection(DocumentComparisons):
         self.hclust = None 
         return sim_mat
 
-    def cluster_articles(self, sim_mat = None, plot = False):
+    def cluster_articles(self, sim_mat = None, method = 'single', plot = False):
         ''' Runs hierarchical agglomerative clustering on pairwise document
         distances, computed as 1 - document similarity scores (defined
         as the matrix of match-weighted pairwise sentence Jaccard indices).
@@ -270,7 +272,7 @@ class DuplicationDetection(DocumentComparisons):
         if sim_mat is None:
             sim_mat = self.sim_mat 
         dist_mat = np.vectorize(utils.ceilzero)(1 - sim_mat)
-        self.hclust = hierarchy.linkage(squareform(dist_mat), method = 'single')
+        self.hclust = hierarchy.linkage(squareform(dist_mat), method = method)
         if plot:
             plt.figure()
             hierarchy.dendrogram(self.hclust)

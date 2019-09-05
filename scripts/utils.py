@@ -5,9 +5,12 @@ import time
 
 # global variables
 paywall_words = ["subscription", "subscribe", "full access", "digital access", "sign up", "unlimited access", 
-            "unlimited digital access", "log in", "login", "sign up", "create an account", 
+            "unlimited digital access", "log in", "login", "sign up", "create an account", "register",
             "never miss a story", "for your first month", "to continue reading", "already a member",
-            "rely on advertising", "click to continue"]
+            "copyright", "all rights reserved", "join now", "never miss a moment", "my account", 
+            "adult content", "©", "submit", "load more", "the document has moved here", "Apache", 
+            "embed", "click here", "clicking here", "contact us", "terms of use", "password"
+            "rely on advertising", "click to", "have an account", "two-factor authentication", "ad block"]
 
 # Helper functions
 
@@ -40,7 +43,7 @@ def ceilzero(x):
     return max(x, 0)
 
 def flatten(vec):
-    return [val for sublist in vec for val in sublist]
+    return [val for sublist in vec for val in sublist if sublist is not None] if vec is not None else []
 
 def subsetmat(mat, inds):
     """ returns subset of a symmetric matrix, indexed by inds """

@@ -25,8 +25,12 @@ class DocumentComparer:
 
 	def jaccard_index(self, bow_a, bow_b, union_subset = False):
 		# Jaccard(A, B) = |A and B|/|A or B|
-		set_a = set(bow_a)
-		set_b = set(bow_b)
+		if bow_a is None or bow_b is None:
+			return -1 if union_subset else 0
+		set_a = set([a for a in bow_a if a is not None])
+		set_b = set([b for b in bow_b if b is not None])
+		if len(set_a) < 1 or len(set_b) < 1:
+			return -1 if union_subset else 0		
 		intsec_words = set_a.intersection(set_b)
 		intsec = len(intsec_words)
 		if union_subset:
@@ -64,7 +68,7 @@ class DocumentComparer:
 		matches = 1.0 * (jac_mat > self.thresh_jaccard)
 		matches = self.weigh_matches(matches, jac_mat) # Weigh rows (source sents)
 		matches = (self.weigh_matches(matches.T, jac_mat.T)).T # Weigh columns
-		return self.jaccard_matches
+		return matches
 
 	def weigh_matches(self, matches, jaccards):
 		for i in np.where(np.max(jaccards, axis = 1) > self.thresh_same_sent)[0]:
@@ -78,19 +82,24 @@ class DocumentComparer:
 		return matches
 
 	def jaccard_score(self, source, target, weighted = True):
-		jac_mat = self.compute_jaccard_matrix(source, target)
-		if jac_mat is None:
+		mats = self.compute_jaccard_matrix(source, target)
+		if mats is None:
 			return 0 # No valid sentences in either source or target
+		[jac_mat, entities_mat] = mats
 		match_mat = self.compute_match_matrix(jac_mat)
 
 		if not weighted:
 			jac_score = np.sum(jac_mat * match_mat)
 			return jac_score / np.min(jac_mat.shape) # count snippets as duplicates
-
+		# Weigh sentences < length 5 lower 
 		s_weights = [min(i/5, 1) for i in source.bow_sent_lens]
 		t_weights = [min(i/5, 1) for i in target.bow_sent_lens]
+		# Weigh sentences without any entities lower (usually unimportant)
+		s_weights = [s_weights[i]/2 if len(source.sent_entities[i]) == 0 else s_weights[i] for i in range(len(s_weights))]
+		t_weights = [t_weights[i]/2 if len(target.sent_entities[i]) == 0 else t_weights[i] for i in range(len(t_weights))]
 		weight_mat = np.reshape([[np.min([s, t]) for t in t_weights] for s in s_weights], [-1, len(t_weights)])
-		score = np.sum(jac_mat * match_mat * weight_mat)
+		# match scores * matched sentences * weights 
+		score = np.sum(jac_mat * match_mat * weight_mat * abs(entities_mat))
 		return 0 if score == 0 else score/np.sum(np.max(weight_mat, axis = 1 - np.argmin(weight_mat.shape)))
 
 class MultiComparisons():
@@ -98,12 +107,13 @@ class MultiComparisons():
 	thresh_same_sent = .9 
 	thresh_same_doc = .5
 	para_sep = "###"
-	parser = None
+	parser = "spacy"
 	comparer = DocumentComparer(thresh_jaccard, thresh_same_sent)
 	pool = None
 	start = time.time()
 
 	def __init__(self):
+		self.pool = None
 		pass
 
 	def setThresholds(self, thresh_jaccard = None, thresh_same_sent = None, thresh_same_doc = None):
@@ -117,17 +127,19 @@ class MultiComparisons():
 
 	def badTextChecker(self, text):
 		text = text.lower()
+		score = 0 
 		if len(text) < 500:
-			return 0.5
-		elif len(text) < 1000 and utils.keywordsin(text):
-			return 1 
-		return 0
+			score = score + 0.5
+		if len(text) < 1000 and utils.keywordsin(text):
+			score = score + 1
+		return score
 
 	def filter_articles(self, df, ids = None):
 		self.start = time.time()
 		if ids is None:
 			df["paywall"] = np.nan # reset all 
 			ids = [i for i in range(len(df))]
+		ndocs = len(ids)
 		# MULTIPROCESSING:create and distribute asynchronous tasks to analyze documents
 		tasks = [df.loc[df["id"] == i, "text"].iloc[0] for i in ids]
 		if self.pool is None:
@@ -139,6 +151,7 @@ class MultiComparisons():
 		for i, res in enumerate(results):
 			df.loc[df["id"] == ids[i], "paywall"] = res 
 		print("Checked article text validity via multiprocessing, %.2fm elapsed" % (utils.minelapsed(self.start)))
+		self.pool = pool
 		return docs 
 
 	def worker(self, docs):
@@ -146,10 +159,12 @@ class MultiComparisons():
 		doc2 = docs[1]
 		# Only compare pairs with high vector cosine similarity 
 		if utils.cosinesim(doc1.vec, doc2.vec) >= 0.8:
-			return self.comparer.jaccard_score(doc1, doc2)
+			if 0 < abs(self.comparer.jaccard_index(utils.flatten(doc1.sent_entities), 
+						utils.flatten(doc2.sent_entities), union_subset = True)):
+				return self.comparer.jaccard_score(doc1, doc2)
 		return 0
 
-	def similarity_mat(self, docs, progress = True, ordered = True):
+	def similarity_mat(self, docs, progress = True, ordered = False):
 		docids = [i for i in docs.keys()]
 		if ordered:
 			docids = np.sort(docids)
@@ -173,8 +188,7 @@ class MultiComparisons():
 		score_mat = score_mat + score_mat.transpose()
 		np.fill_diagonal(score_mat, 1.0)
 		print("Finished document comparisons via multiprocessing, %.2fm elapsed" % (utils.minelapsed(self.start)))
-		pool.close()
-		pool.join()
+		self.pool = pool
 		return score_mat 
 
 	def reader(self, dfitems):
@@ -192,7 +206,11 @@ class MultiComparisons():
 			self.parser = parser 
 		# MULTIPROCESSING: create and distribute asynchronous tasks to read docs
 		tasks = [df.loc[df["id"] == i, ["id", "text", "doc"]].iloc[0] for i in ids]
-		pool = mp.Pool(processes = min(mp.cpu_count() - 2, round(ndocs/50 + 1)))
+		if self.pool is None:
+			pool = mp.Pool(processes = min(mp.cpu_count() - 2, round(ndocs/50 + 1)))
+		else:
+			pool = self.pool
+			self.pool = None
 		results = pool.imap(self.reader, tasks)
 		docs = {}
 		for i, doc in enumerate(results):
@@ -205,6 +223,9 @@ class MultiComparisons():
 	def run(self, docs, progress = True):
 		self.start = time.time()
 		return self.similarity_mat(docs = docs, progress = progress)
+		if self.pool is not None:
+			self.pool.close()
+			self.pool.join()
 
 if __name__=='__main__': # Test multi and serial processing speeds
 	article_df = pd.read_pickle(os.path.join("data", "article_df_20180715"))

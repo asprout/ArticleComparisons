@@ -11,10 +11,10 @@ NLP = spacy.load("en_core_web_md", disable = ['tagger'])
 from . import utils
 
 class Document:
-    def __init__(self, text, para_sep = "###", parser = "spacy",
+    def __init__(self, text, para_sep = "###", parser = "spacy", clean = True, 
                        text_encoding = "utf8", text_language = "english"):
         # Document parsing parameters (should NOT be changed except for dev purposes!)
-        self.clean = True # removes 'bad' paragraphs and duplicate sentences 
+        self.clean = clean # removes 'bad' paragraphs and duplicate sentences 
         self.min_para = 4 # minimum number of words in paragraph
         self.stem = True # Should words be stemmed?
         # Document-specific Parameters 
@@ -22,6 +22,8 @@ class Document:
         self.text_encoding = text_encoding
         self.text_language = text_language # only handling english for now 
         # Parsed document objects 
+        self.invalid = 0
+        self.nchar = 0
         self.vec = None
         self.sentences = None # List of sentence strings 
         self.sent_para_map = None # List of corresponding paragraph numbers of each sentence       
@@ -33,6 +35,7 @@ class Document:
             self.parse_spacy(text)
         else:
             self.parse_nltk(text)
+        self.checkValid()
 
     def __str__(self):
         if self.sentences is None: 
@@ -45,6 +48,7 @@ class Document:
 
     def parse_paragraphs(self, text):
         ''' Returns list of paragraphs, excluding those below word threshold or CAPS-only '''
+        self.nchar = len(text)
         paras = text.split(self.para_sep) if text is not None else text 
         if self.clean:
             paras = [p for p in paras if len(p.split()) >= self.min_para and not p.isupper()]
@@ -102,9 +106,10 @@ class Document:
                 tokens = dict(Counter([t.lower() for t in tokens if utils.isalnum(t)]))
                 if not self.clean or (len(tokens) > 0 and tokens not in bow_sentences):
                     bow_sentences.append(tokens)
-                    sent_entities.append([ent.lemma_.lower() for ent in s_span.ents if (
+                    sent_entities.append([ent.lemma_.lower() if (
                         ent.label_ in ['PERSON', 'GPE', 'ORG'] or 
-                        ent.label_ == "DATE" and len(ent.text) >= 10)])
+                        ent.label_ == "DATE" and len(ent.text) >= 10) else None
+                        for ent in s_span.ents])
                     bow_sent_map.append(len(sentences) - 1)
                     bow_sent_lens.append(len(tokens))
         self.vec = np.array(vectors).mean(axis = 0) if len(vectors) > 0 else None
@@ -179,3 +184,10 @@ class Document:
         
     def get_bow_sentence_lens(self):
         return self.bow_sent_lens 
+
+    def checkValid(self):
+        penalty = 0.5 * (self.nchar < 500)
+        penalty += 1 * (sum([1 for sent in self.sentences if utils.keywordsin(sent)]) > len(self.sentences)/2)
+        entities = [ent for ent in utils.flatten(self.sent_entities) if ent is not None]
+        penalty += 2 * (len(entities) < 1)
+        self.invalid = penalty
