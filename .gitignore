@@ -2,4 +2,5 @@ __pycache__/
 .ipynb_checkpoints/
 data/article_df_20190601
 data/article_df_20180715
+data/pickled_df_20190601
 *.pyc
