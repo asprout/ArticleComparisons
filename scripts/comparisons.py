@@ -23,7 +23,7 @@ class DocumentComparisons:
 
     def setThresholds(self, thresh_jaccard = None, thresh_same_sent = None):
         if thresh_jaccard is not None: # min Jaccard index to be considered a sentence match
-            self.thresh_jaccard = max(thresh_jaccard, 0.001)
+            self.thresh_jaccard = max(thresh_jaccard, 0.0001)
         if thresh_same_sent is not None: # Jaccard index to be considered a definite match
             self.thresh_same_sent = thresh_same_sent
 
@@ -143,12 +143,6 @@ class DocumentComparisons:
     def jaccard_score(self, source = None, target = None, weighted = True):
         ''' Prints the similarity score between the source and target docs 
         '''
-        # Switch the documents so that the source is always the shorter document
-        #source = doc1
-        #target = doc2
-        #if utils.notNone([doc1, doc2]) and len(doc1.bow_sentences) > len(doc2.bow_sentences):
-        #    source = doc2
-        #    target = doc1
         jac_mat = self.get_jaccard_matrix(source, target)
         if jac_mat is None:
             return 0 # No valid sentences in either source or target
@@ -220,10 +214,7 @@ class DuplicationDetection(DocumentComparisons):
         doc_dict = {}
         for doc_id in ids:
             row = df["id"] == doc_id 
-            if parser is not None:
-                df.loc[row, "doc"] = documents.Document(df.loc[row, "text"].iloc[0], para_sep, parser)
-            elif df.loc[row, "doc"].iloc[0] is None:
-                df.loc[row, "doc"] = documents.Document(df.loc[row, "text"].iloc[0], para_sep)
+            df.loc[row, "doc"] = documents.Document(df.loc[row, "text"].iloc[0], para_sep, parser)
             doc_dict[doc_id] = df.loc[row, "doc"].iloc[0]
         return doc_dict
 

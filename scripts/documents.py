@@ -63,36 +63,7 @@ class Document:
         bow_sent_lens = []
         vectors = []
         paras = self.parse_paragraphs(text)
-        '''
-        text_span_obj = NLP(text) # Parse a string of all valid paragraphs.
-        text_span = [s for s in text_span_obj.sents] # convert span to list
-        i_para = 0
-        i_sent = 0 
-        while i_sent < len(text_span):
-            s_spans = 
-            s_span = 
-        while i_para < len(paras):
-            s_span = text_span[i_sent]
-            s_str = str(s_span) 
-            while i_sent < len(text_span) and s_str in paras[i_para]:
-                if self.clean and (len(s_str) == 0 or s_str in sentences):
-                    i_sent += 1 
-                    continue 
-                sentences.append(s_str)
-                sent_para_map.append(i_para)
-                tokens = [str(t.lemma_) for t in s_span] if self.stem else [str(t) for t in s_span]
-                tokens = dict(Counter([t.lower() for t in tokens if isalnum(t)]))
-                if not self.clean or (len(tokens) > 0 and tokens not in bow_sentences):
-                    bow_sentences.append(tokens)
-                    bow_sent_map.append(i_sent)
-                    bow_sent_lens.append(len(tokens))
 
-                i_sent += 1 
-                s_span = text_span[i_sent]
-                s_str = str(s_span)
-
-            i_para += 1
-        '''
         for i, para in enumerate(paras):
             para_span = NLP(para) # Spacy document object 
             vectors.append(para_span.vector)
@@ -112,13 +83,14 @@ class Document:
                         for ent in s_span.ents])
                     bow_sent_map.append(len(sentences) - 1)
                     bow_sent_lens.append(len(tokens))
-        self.vec = np.array(vectors).mean(axis = 0) if len(vectors) > 0 else None
+
         self.sentences = np.array(sentences)
         self.sent_para_map = np.array(sent_para_map)
         self.bow_sentences = np.array(bow_sentences)
         self.sent_entities = np.array(sent_entities)
         self.bow_sent_map = np.array(bow_sent_map)
         self.bow_sent_lens = np.array(bow_sent_lens)
+        self.vec = np.array(vectors).mean(axis = 0) if len(vectors) > 0 else None
         return self.bow_sentences
 
     def parse_nltk(self, text):
@@ -187,7 +159,7 @@ class Document:
 
     def checkValid(self):
         penalty = 0.5 * (self.nchar < 500)
-        penalty += 1 * (sum([1 for sent in self.sentences if utils.keywordsin(sent)]) > len(self.sentences)/2)
+        penalty += 1 * (len([1 for sent in self.sentences if utils.keywordsin(sent)]) > len(self.sentences)/2)
         entities = [ent for ent in utils.flatten(self.sent_entities) if ent is not None]
         penalty += 2 * (len(entities) < 1)
         self.invalid = penalty

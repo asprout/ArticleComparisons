@@ -1,0 +1,78 @@
+<!-- You must include this JavaScript file -->
+<script src="https://assets.crowd.aws/crowd-html-elements.js"></script>
+
+<!-- For the full list of available Crowd HTML Elements and their input/output documentation,
+      please refer to https://docs.aws.amazon.com/sagemaker/latest/dg/sms-ui-template-reference.html -->
+
+<!-- You must include crowd-form so that your task submits answers to MTurk -->
+<crowd-form answer-format="flatten-objects">
+    <!-- The crowd-classifier element will create a tool for the Worker to select the
+           correct answer to your question -->
+    <crowd-classifier 
+        categories="['News Article', 'Multimedia News', 'Advertisement', 'Junk Content', 'Personal Post', 'Other']"
+        header="Select the label that best describes the content shown."
+        name="label">
+
+        <classification-target>
+
+            <!-- Your document URLs will be substituted for the "document_url" variable 
+                   when you publish a batch with an input file containing multiple PDF document URLs
+                   To preview the element with an example PDF document, try setting the src attribute to
+                   "https://s3.amazonaws.com/mturk-sample-files/Shareholderletter97.pdf" -->
+            <article class="text">
+                <p>${html}</p>
+            </article>
+
+        </classification-target>
+
+        <!-- Use the short-instructions section for quick instructions that the Worker
+              will see while working on the task. Including some basic examples of 
+              good and bad answers here can help get good results. You can include 
+              any HTML here. -->
+        <short-instructions>
+            <h6>Please use the following definitions to choose the most appropriate label for the given content:</h6>
+            <ul>
+                <li><b>News Article</b>: A passage from a complete news article.  <i>Includes: editorials, audio transcripts, obituaries, etc.</i></li>
+                <li><b>Multimedia News</b>: Accompanying text to news content presented in non-text forms. <i>Includes: audio, image, and video captions, etc.</i></li>
+                <li><b>Advertisement</b>: Marketing communications that promote a product, service, or idea. <i>Includes: sign-up and subscription solicitations, spam, etc.</i></li>
+                <li><b>Junk Content</b>: Incomplete scrapes, broken content, or webpage-generated messages. <i>Includes: HTML/CSS code, error messages, login and "click to view more" instructions, etc.</i></li>
+                <li><b>Personal Post</b>: Non-news content created by individual users. <i>Includes: posts or comments on blogs and forums, etc.</i></li>
+                <li><b>Other</b>: Other types of non-news content. <i>Includes: weather updates, sports game score updates, copyright messages, etc.</i></li>
+            </ul>
+        </short-instructions>
+
+        <!-- Use the full-instructions section for more detailed instructions that the 
+              Worker can open while working on the task. Including more detailed 
+              instructions and additional examples of good and bad answers here can
+              help get good results. You can include any HTML here. -->
+        <full-instructions header="Document Classification Instructions">
+            <p>We scraped web pages from a set of English news websites for the purpose of gathering samples of online news articles. The text shown are excerpts from our webpage scrapes.</p>
+            <p>Your task is to select the label that <b>best</b> describes the given text. That is, you will:</p>
+            <p><ol>
+                <li>Determine whether the text is a valid excerpt of a news article, and</li>
+                <li>If not, select the alternative category that <b>best</b> describes the text.</li>
+            </ol></li></p>
+            <p>If you believe that multiple categories describe the text, please select the predominant category that describes the majority of the content.</p>
+            <p><i>The following are example scrapes for each of the possible labels.</i></p>
+            <hr>
+            <p><b>News Article:</b></p>
+            <p>Jun. 1, 2019 12:10 PM EDT<br><br>Tremors rattle southeast Albania, injuring 4, damaging homes<br><br>TIRANA, Albania (AP) â€” An earthquake with a preliminary magnitude of 5.3 struck rural areas in Albania early Saturday southeast of Tirana, the capital, injuring four people and damaging about 100 houses, authorities said.<br><br>The Defense Ministry reported that four people were injured from falling walls at their homes and about 100 houses, many uninhabited, were damaged. The injured were sent to a local hospital.</p>
+            <hr>
+            <p><b>Multimedia News:</b></p>
+            <p>June 01, 2019 08:06 AM<br><br>In this Thursday, May 30, 2019 photo, Brandon "BMike" Odoms, in man-lift, and students in the Young Artist Movement work on a mural in downtown New Orleans. The mural is one of five created as part of an Arts Council of New Orleans project called "Unframed. " The council's executive director, Heidi Schmalbach, says the group wants New Orleans to be known for its contemporary art as much as for its music, food and culture. Janet McConnaughey AP Photo</p>
+            <hr>
+            <p><b>Advertisement:</b></p>
+            <p>Take Five - This is your final free article during this 30 day period. Stay in touch with all of the news. Sign up today for complete digital access to The Daily News-Record.<br><br><br><br>Sign up today for complete digital access to The Daily News-Record.<br><br>Thank you for signing in!<br><br><br><br>This is your fourth of five free articles during this 30 day period.</p>
+            <hr>
+            <p><b>Junk Scrape:</b></p>
+            <p>FacebookEmail Twitter Google+ LinkedIn Pinterest<br><br>A 'woman of God,' a Scottish music lover: These are the victims of Virginia Beach shooting<br><br>Virginia Beach Police said 12 people were killed in the mass shooting and at least four more were wounded. An officer was among those injured.<br><br>A 'woman of God,' a Scottish music lover: These are the victims of Virginia Beach shooting Virginia Beach Police said 12 people were killed in the mass shooting and at least four more were wounded. An officer was among those injured. Check out this story on timesrecordnews.com: https://www.usatoday.com/story/news/nation/2019/06/01/virginia-beach-mass-shooting-victims-names-released-others-injured/1310647001/</p>
+            <hr>
+            <p><b>Personal Post:</b></p>
+            <p>Isn't CSGO sort of arcade gunplay too? Perhaps I don't understand your definition of the term.<br><br><br><br><br><br><br><br><br><br>Yes it does sound reasonable, also it is more appealing because would've been an open world "Bioshock", but they wanted to much on one game and couldn't decide which one should stay.<br><br>Theoretically you are correct, if a big studio or publisher can see the potential in it, hope fully picks up and do something good, but nowadays I barely see any good game which is not:<br><br>- a Beta version released as Full game and 2 years later (when no one cares) become the one which should've been the version they start with.<br><br>- in it's Alpha state released as Full game and reach Beta in the next 1-2 years as a Full Game</p>
+            <hr>
+            <p><b>Other</b></p>
+            <p>Partly cloudy starting in the afternoon, continuing until evening.<br><br>13% chance of precipitation<br><br>Partly cloudy starting in the afternoon.<br><br>17% chance of precipitation<br><br>Mostly cloudy throughout the day.<br><br>19% chance of precipitation</p>
+            <hr>
+        </full-instructions>
+    </crowd-classifier>
+</crowd-form>

@@ -1,0 +1,373 @@
+hitid	taskid	workerid	module	varname	response
+5	0	Mm	intro	intro	I have read and understood the task instructions and examples.
+5	1	Mm	screen0	screen_valid0	0
+5	1	Mm	screen0	screen_label0	1
+5	2	Mm	screen1	screen_valid1	0
+5	2	Mm	screen1	screen_label1	0
+5	3	Mm	screen2	screen_valid2	1
+5	3	Mm	screen2	screen_label2	
+5	4	Mm	screen3	screen_valid3	1
+5	4	Mm	screen3	screen_label3	
+5	5	Mm	screen4	screen_valid4	1
+5	5	Mm	screen4	screen_label4	
+5	56	Mm	pass_screen	pass_screen	I have checked and understood the practice labels.
+5	8	Mm	label	valid	Yes
+5	8	Mm	label	label	
+5	10	Mm	label	valid	No
+5	10	Mm	label	label	Personal
+5	11	Mm	label	valid	Yes
+5	11	Mm	label	label	
+5	13	Mm	label	valid	Yes
+5	13	Mm	label	label	
+5	15	Mm	label	valid	Yes
+5	15	Mm	label	label	
+5	16	Mm	label	valid	Yes
+5	16	Mm	label	label	
+5	17	Mm	label	valid	Yes
+5	17	Mm	label	label	
+5	18	Mm	label	valid	No
+5	18	Mm	label	label	Junk
+5	19	Mm	label	valid	Yes
+5	19	Mm	label	label	
+5	25	Mm	label	valid	Yes
+5	25	Mm	label	label	
+5	26	Mm	label	valid	No
+5	26	Mm	label	label	Multimedia News
+5	27	Mm	label	valid	No
+5	27	Mm	label	label	Personal
+5	28	Mm	label	valid	Yes
+5	28	Mm	label	label	
+5	33	Mm	label	valid	Yes
+5	33	Mm	label	label	
+5	34	Mm	label	valid	Yes
+5	34	Mm	label	label	
+5	36	Mm	label	valid	Yes
+5	36	Mm	label	label	
+5	40	Mm	label	valid	Yes
+5	40	Mm	label	label	
+5	41	Mm	label	valid	Yes
+5	41	Mm	label	label	
+5	43	Mm	label	valid	Yes
+5	43	Mm	label	label	
+5	44	Mm	label	valid	Yes
+5	44	Mm	label	label	
+5	47	Mm	label	valid	Yes
+5	47	Mm	label	label	
+5	50	Mm	label	valid	Yes
+5	50	Mm	label	label	
+5	52	Mm	label	valid	Yes
+5	52	Mm	label	label	
+5	53	Mm	label	valid	No
+5	53	Mm	label	label	Junk
+5	55	Mm	label	valid	Yes
+5	55	Mm	label	label	
+0	0	Test1	intro	intro	I have read and understood the task instructions and examples.
+0	1	Test1	screen0	screen_valid0	0
+0	1	Test1	screen0	screen_label0	1
+0	2	Test1	screen1	screen_valid1	0
+0	2	Test1	screen1	screen_label1	0
+0	3	Test1	screen2	screen_valid2	0
+0	3	Test1	screen2	screen_label2	1
+0	4	Test1	screen3	screen_valid3	1
+0	4	Test1	screen3	screen_label3	
+0	5	Test1	screen4	screen_valid4	0
+0	5	Test1	screen4	screen_label4	1
+0	56	Test1	pass_screen	pass_screen	I have checked and understood the practice labels.
+0	7	Test1	label	valid	No
+0	7	Test1	label	label	Advertisement
+0	8	Test1	label	valid	No
+0	8	Test1	label	label	Other
+0	10	Test1	label	valid	No
+0	10	Test1	label	label	Personal
+0	11	Test1	label	valid	Yes
+0	11	Test1	label	label	
+0	12	Test1	label	valid	No
+0	12	Test1	label	label	Junk
+0	15	Test1	label	valid	No
+0	15	Test1	label	label	Junk
+0	17	Test1	label	valid	Yes
+0	17	Test1	label	label	
+0	18	Test1	label	valid	No
+0	18	Test1	label	label	Personal
+0	21	Test1	label	valid	No
+0	21	Test1	label	label	Junk
+0	22	Test1	label	valid	No
+0	22	Test1	label	label	Other
+0	24	Test1	label	valid	No
+0	24	Test1	label	label	Personal
+0	25	Test1	label	valid	Yes
+0	25	Test1	label	label	
+0	26	Test1	label	valid	No
+0	26	Test1	label	label	Other
+0	28	Test1	label	valid	Yes
+0	28	Test1	label	label	
+0	30	Test1	label	valid	Yes
+0	30	Test1	label	label	
+0	34	Test1	label	valid	Yes
+0	34	Test1	label	label	
+0	35	Test1	label	valid	Yes
+0	35	Test1	label	label	
+0	37	Test1	label	valid	No
+0	37	Test1	label	label	Other
+0	42	Test1	label	valid	Yes
+0	42	Test1	label	label	
+0	44	Test1	label	valid	No
+0	44	Test1	label	label	Other
+0	45	Test1	label	valid	No
+0	45	Test1	label	label	Personal
+0	47	Test1	label	valid	No
+0	47	Test1	label	label	Advertisement
+0	48	Test1	label	valid	No
+0	48	Test1	label	label	Personal
+0	51	Test1	label	valid	Yes
+0	51	Test1	label	label	
+0	52	Test1	label	valid	Yes
+0	52	Test1	label	label	
+1	0	: COPIEDA3SC2T8BIWWI9Q	intro	intro	I have read and understood the task instructions and examples.
+1	1	: COPIEDA3SC2T8BIWWI9Q	screen0	screen_valid0	0
+1	1	: COPIEDA3SC2T8BIWWI9Q	screen0	screen_label0	1
+1	2	: COPIEDA3SC2T8BIWWI9Q	screen1	screen_valid1	0
+1	2	: COPIEDA3SC2T8BIWWI9Q	screen1	screen_label1	1
+1	3	: COPIEDA3SC2T8BIWWI9Q	screen2	screen_valid2	0
+1	3	: COPIEDA3SC2T8BIWWI9Q	screen2	screen_label2	1
+1	4	: COPIEDA3SC2T8BIWWI9Q	screen3	screen_valid3	1
+1	4	: COPIEDA3SC2T8BIWWI9Q	screen3	screen_label3	
+1	5	: COPIEDA3SC2T8BIWWI9Q	screen4	screen_valid4	0
+1	5	: COPIEDA3SC2T8BIWWI9Q	screen4	screen_label4	1
+1	56	: COPIEDA3SC2T8BIWWI9Q	pass_screen	pass_screen	I have checked and understood the practice labels.
+1	6	: COPIEDA3SC2T8BIWWI9Q	label	valid	Yes
+1	6	: COPIEDA3SC2T8BIWWI9Q	label	label	
+1	9	: COPIEDA3SC2T8BIWWI9Q	label	valid	No
+1	9	: COPIEDA3SC2T8BIWWI9Q	label	label	Advertisement
+1	13	: COPIEDA3SC2T8BIWWI9Q	label	valid	No
+1	13	: COPIEDA3SC2T8BIWWI9Q	label	label	Other
+1	14	: COPIEDA3SC2T8BIWWI9Q	label	valid	Yes
+1	14	: COPIEDA3SC2T8BIWWI9Q	label	label	
+1	16	: COPIEDA3SC2T8BIWWI9Q	label	valid	No
+1	16	: COPIEDA3SC2T8BIWWI9Q	label	label	Other
+1	19	: COPIEDA3SC2T8BIWWI9Q	label	valid	No
+1	19	: COPIEDA3SC2T8BIWWI9Q	label	label	Other
+1	20	: COPIEDA3SC2T8BIWWI9Q	label	valid	No
+1	20	: COPIEDA3SC2T8BIWWI9Q	label	label	Other
+1	23	: COPIEDA3SC2T8BIWWI9Q	label	valid	Yes
+1	23	: COPIEDA3SC2T8BIWWI9Q	label	label	
+1	27	: COPIEDA3SC2T8BIWWI9Q	label	valid	No
+1	27	: COPIEDA3SC2T8BIWWI9Q	label	label	Advertisement
+1	29	: COPIEDA3SC2T8BIWWI9Q	label	valid	No
+1	29	: COPIEDA3SC2T8BIWWI9Q	label	label	Other
+1	31	: COPIEDA3SC2T8BIWWI9Q	label	valid	Yes
+1	31	: COPIEDA3SC2T8BIWWI9Q	label	label	
+1	32	: COPIEDA3SC2T8BIWWI9Q	label	valid	No
+1	32	: COPIEDA3SC2T8BIWWI9Q	label	label	Junk
+1	33	: COPIEDA3SC2T8BIWWI9Q	label	valid	No
+1	33	: COPIEDA3SC2T8BIWWI9Q	label	label	Junk
+1	36	: COPIEDA3SC2T8BIWWI9Q	label	valid	No
+1	36	: COPIEDA3SC2T8BIWWI9Q	label	label	Advertisement
+1	38	: COPIEDA3SC2T8BIWWI9Q	label	valid	No
+1	38	: COPIEDA3SC2T8BIWWI9Q	label	label	Advertisement
+1	39	: COPIEDA3SC2T8BIWWI9Q	label	valid	No
+1	39	: COPIEDA3SC2T8BIWWI9Q	label	label	Other
+1	40	: COPIEDA3SC2T8BIWWI9Q	label	valid	No
+1	40	: COPIEDA3SC2T8BIWWI9Q	label	label	Personal
+1	41	: COPIEDA3SC2T8BIWWI9Q	label	valid	Yes
+1	41	: COPIEDA3SC2T8BIWWI9Q	label	label	
+1	43	: COPIEDA3SC2T8BIWWI9Q	label	valid	No
+1	43	: COPIEDA3SC2T8BIWWI9Q	label	label	Junk
+1	46	: COPIEDA3SC2T8BIWWI9Q	label	valid	No
+1	46	: COPIEDA3SC2T8BIWWI9Q	label	label	Personal
+1	49	: COPIEDA3SC2T8BIWWI9Q	label	valid	No
+1	49	: COPIEDA3SC2T8BIWWI9Q	label	label	Other
+1	50	: COPIEDA3SC2T8BIWWI9Q	label	valid	No
+1	50	: COPIEDA3SC2T8BIWWI9Q	label	label	Other
+1	53	: COPIEDA3SC2T8BIWWI9Q	label	valid	No
+1	53	: COPIEDA3SC2T8BIWWI9Q	label	label	Junk
+1	54	: COPIEDA3SC2T8BIWWI9Q	label	valid	No
+1	54	: COPIEDA3SC2T8BIWWI9Q	label	label	Multimedia News
+1	55	: COPIEDA3SC2T8BIWWI9Q	label	valid	No
+1	55	: COPIEDA3SC2T8BIWWI9Q	label	label	Other
+3	0	ling	intro	intro	I have read and understood the task instructions and examples.
+3	1	ling	screen0	screen_valid0	0
+3	1	ling	screen0	screen_label0	1
+3	2	ling	screen1	screen_valid1	0
+3	2	ling	screen1	screen_label1	0
+3	3	ling	screen2	screen_valid2	0
+3	3	ling	screen2	screen_label2	1
+3	4	ling	screen3	screen_valid3	1
+3	4	ling	screen3	screen_label3	
+3	5	ling	screen4	screen_valid4	0
+3	5	ling	screen4	screen_label4	1
+3	56	ling	pass_screen	pass_screen	I have checked and understood the practice labels.
+3	6	ling	label	valid	Yes
+3	6	ling	label	label	
+3	7	ling	label	valid	No
+3	7	ling	label	label	Advertisement
+3	8	ling	label	valid	No
+3	8	ling	label	label	Other
+3	10	ling	label	valid	No
+3	10	ling	label	label	Personal
+3	12	ling	label	valid	No
+3	12	ling	label	label	Junk
+3	16	ling	label	valid	No
+3	16	ling	label	label	Other
+3	17	ling	label	valid	No
+3	17	ling	label	label	Junk
+3	20	ling	label	valid	No
+3	20	ling	label	label	Junk
+3	23	ling	label	valid	Yes
+3	23	ling	label	label	
+3	25	ling	label	valid	Yes
+3	25	ling	label	label	
+3	29	ling	label	valid	Yes
+3	29	ling	label	label	
+3	30	ling	label	valid	Yes
+3	30	ling	label	label	
+3	32	ling	label	valid	No
+3	32	ling	label	label	Junk
+3	33	ling	label	valid	No
+3	33	ling	label	label	Junk
+3	34	ling	label	valid	Yes
+3	34	ling	label	label	
+3	35	ling	label	valid	Yes
+3	35	ling	label	label	
+3	37	ling	label	valid	No
+3	37	ling	label	label	Other
+3	39	ling	label	valid	No
+3	39	ling	label	label	Other
+3	40	ling	label	valid	No
+3	40	ling	label	label	Other
+3	42	ling	label	valid	No
+3	42	ling	label	label	Advertisement
+3	44	ling	label	valid	No
+3	44	ling	label	label	Other
+3	45	ling	label	valid	No
+3	45	ling	label	label	Personal
+3	51	ling	label	valid	Yes
+3	51	ling	label	label	
+3	52	ling	label	valid	Yes
+3	52	ling	label	label	
+3	54	ling	label	valid	No
+3	54	ling	label	label	Other
+4	0	ling4	intro	intro	I have read and understood the task instructions and examples.
+4	1	ling4	screen0	screen_valid0	0
+4	1	ling4	screen0	screen_label0	1
+4	2	ling4	screen1	screen_valid1	0
+4	2	ling4	screen1	screen_label1	0
+4	3	ling4	screen2	screen_valid2	0
+4	3	ling4	screen2	screen_label2	1
+4	4	ling4	screen3	screen_valid3	1
+4	4	ling4	screen3	screen_label3	
+4	5	ling4	screen4	screen_valid4	1
+4	5	ling4	screen4	screen_label4	
+4	56	ling4	pass_screen	pass_screen	I have checked and understood the practice labels.
+4	6	ling4	label	valid	Yes
+4	6	ling4	label	label	
+4	7	ling4	label	valid	No
+4	7	ling4	label	label	Advertisement
+4	9	ling4	label	valid	No
+4	9	ling4	label	label	Advertisement
+4	12	ling4	label	valid	No
+4	12	ling4	label	label	Junk
+4	14	ling4	label	valid	Yes
+4	14	ling4	label	label	
+4	20	ling4	label	valid	No
+4	20	ling4	label	label	Junk
+4	21	ling4	label	valid	No
+4	21	ling4	label	label	Junk
+4	22	ling4	label	valid	No
+4	22	ling4	label	label	Advertisement
+4	23	ling4	label	valid	Yes
+4	23	ling4	label	label	
+4	24	ling4	label	valid	No
+4	24	ling4	label	label	Personal
+4	29	ling4	label	valid	Yes
+4	29	ling4	label	label	
+4	30	ling4	label	valid	Yes
+4	30	ling4	label	label	
+4	31	ling4	label	valid	Yes
+4	31	ling4	label	label	
+4	32	ling4	label	valid	No
+4	32	ling4	label	label	Junk
+4	35	ling4	label	valid	Yes
+4	35	ling4	label	label	
+4	37	ling4	label	valid	No
+4	37	ling4	label	label	Other
+4	38	ling4	label	valid	No
+4	38	ling4	label	label	Junk
+4	39	ling4	label	valid	No
+4	39	ling4	label	label	Advertisement
+4	42	ling4	label	valid	No
+4	42	ling4	label	label	Multimedia News
+4	45	ling4	label	valid	No
+4	45	ling4	label	label	Other
+4	46	ling4	label	valid	No
+4	46	ling4	label	label	Personal
+4	48	ling4	label	valid	No
+4	48	ling4	label	label	Junk
+4	49	ling4	label	valid	Yes
+4	49	ling4	label	label	
+4	51	ling4	label	valid	Yes
+4	51	ling4	label	label	
+4	54	ling4	label	valid	No
+4	54	ling4	label	label	Other
+2	0	ling2	intro	intro	I have read and understood the task instructions and examples.
+2	1	ling2	screen0	screen_valid0	0
+2	1	ling2	screen0	screen_label0	1
+2	2	ling2	screen1	screen_valid1	0
+2	2	ling2	screen1	screen_label1	0
+2	3	ling2	screen2	screen_valid2	0
+2	3	ling2	screen2	screen_label2	1
+2	4	ling2	screen3	screen_valid3	1
+2	4	ling2	screen3	screen_label3	
+2	5	ling2	screen4	screen_valid4	1
+2	5	ling2	screen4	screen_label4	
+2	56	ling2	pass_screen	pass_screen	I have checked and understood the practice labels.
+2	9	ling2	label	valid	No
+2	9	ling2	label	label	Advertisement
+2	11	ling2	label	valid	Yes
+2	11	ling2	label	label	
+2	13	ling2	label	valid	No
+2	13	ling2	label	label	Other
+2	14	ling2	label	valid	Yes
+2	14	ling2	label	label	
+2	15	ling2	label	valid	No
+2	15	ling2	label	label	Junk
+2	18	ling2	label	valid	No
+2	18	ling2	label	label	Personal
+2	19	ling2	label	valid	No
+2	19	ling2	label	label	Other
+2	21	ling2	label	valid	No
+2	21	ling2	label	label	Junk
+2	22	ling2	label	valid	No
+2	22	ling2	label	label	Other
+2	24	ling2	label	valid	No
+2	24	ling2	label	label	Personal
+2	26	ling2	label	valid	No
+2	26	ling2	label	label	Multimedia News
+2	27	ling2	label	valid	No
+2	27	ling2	label	label	Personal
+2	28	ling2	label	valid	Yes
+2	28	ling2	label	label	
+2	31	ling2	label	valid	Yes
+2	31	ling2	label	label	
+2	36	ling2	label	valid	No
+2	36	ling2	label	label	Other
+2	38	ling2	label	valid	No
+2	38	ling2	label	label	Junk
+2	41	ling2	label	valid	Yes
+2	41	ling2	label	label	
+2	43	ling2	label	valid	No
+2	43	ling2	label	label	Junk
+2	46	ling2	label	valid	No
+2	46	ling2	label	label	Personal
+2	47	ling2	label	valid	Yes
+2	47	ling2	label	label	
+2	48	ling2	label	valid	No
+2	48	ling2	label	label	Junk
+2	49	ling2	label	valid	Yes
+2	49	ling2	label	label	
+2	50	ling2	label	valid	Yes
+2	50	ling2	label	label	
+2	53	ling2	label	valid	No
+2	53	ling2	label	label	Junk
+2	55	ling2	label	valid	Yes
+2	55	ling2	label	label	

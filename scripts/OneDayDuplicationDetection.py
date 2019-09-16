@@ -14,13 +14,13 @@ if __name__=='__main__':
     start = time.time()
     data_folder = "data"
     results_folder = os.path.join("..", "results")
-    para_sep = "\n"
+    para_sep = "###"
     parser = "spacy"
     thresh_jaccard = .5
     thresh_same_sent = .9
-    thresh_same_doc = .25
+    thresh_same_doc = .75
 
-    date = "20190601"
+    date = "20180715"
     if len(sys.argv) > 1:
         date = sys.argv[1]
 
@@ -37,12 +37,9 @@ if __name__=='__main__':
     try:
         results_df = pd.read_csv(os.path.join(results_folder, "results_" + date + "_clusters_temp.csv"))
     except:
-        results_df = pd.DataFrame(list(zip(events, n)), columns = ["event", "n"])
-        results_df["unique25"] = np.nan
-        results_df["unique75"] = np.nan
-        results_df["n_good"] = np.nan
-        results_df["unique25_good"] = np.nan
-        results_df["unique75_good"] = np.nan
+        results_df = pd.DataFrame(columns = ["event", "n", "n_valid"] + [f"unique{thresh}" for thresh in range(10, 100, 5)])
+        results_df["event"] = events
+        results_df["n"] = n
 
     print("Setup time: %d s" % np.round(time.time() - start))
 
@@ -53,25 +50,29 @@ if __name__=='__main__':
     i = len(events) - 1
     while i >= 0: # Loops over the events
         if not np.isnan(results_df.loc[i, "unique25"]):
-            print("Skipping event number %d" % (i))
+            print("Skipping completed event %d" % (i))
             i = i - 1
             continue 
         print("Starting comparisons for Event %d of size %d" % (i, n[i]))
         start = time.time()
         sample = np.array(article_df.loc[article_df["event"] == events[i], "id"])
         if n[i] > 10000:
+            print(f"Sampling from event {i} due to large size")
             sample = random.sample(list(sample), 1000)
-        good_inds = [i for i in range(len(sample)) if article_df.loc[sample[i], "paywall"] == 0]
 
         article_dict = comparer.dict_by_ids(article_df, sample, para_sep, parser)
-        sim_mat = comparer.run(article_dict)
+
+        article_df.loc[sample, "invalid"] = [article_df.loc[article_df["id"] == i, "doc"].iloc[0].invalid for i in sample]
+        valid_inds = [i for i in sample if article_df.loc[i, "invalid"] == 0]
+        article_dict_valid = {k: article_dict[k] for k in valid_inds}
+
+        sim_mat = comparer.run(article_dict_valid)
         dd.cluster_articles(sim_mat)
-        results_df.loc[i, "unique25"] = dd.prop_unique_clusters(thresh_same_doc = 0.25)
-        results_df.loc[i, "unique25_good"] = dd.prop_unique_clusters(thresh_same_doc = 0.25, subset = good_inds)
-        results_df.loc[i, "unique75"] = dd.prop_unique_clusters(thresh_same_doc = 0.75)
-        results_df.loc[i, "unique75_good"] = dd.prop_unique_clusters(thresh_same_doc = 0.75, subset = good_inds)
-        
-        results_df.loc[i, "n_good"] = len(good_inds)
+        for thresh in range(10, 100, 5):
+            results_df.loc[i, f"unique{thresh}"] = dd.prop_unique_clusters(thresh_same_doc = thresh)
+
+        results_df.loc[i, "n_valid"] = len(valid_inds)
+
         try:
             results_df.to_csv(os.path.join(results_folder, "results_" + date + "_clusters_temp.csv"), index = False)
         except:
@@ -79,8 +80,30 @@ if __name__=='__main__':
                 results_df.to_csv(os.path.join(results_folder, "results_" + date + "_clusters_temp2.csv"), index = False)
             except:
                 print("Can't write to csv")
-        print(results_df.loc[i])
-        print("Completed comparisons for Event %d of size %d, %.2fm elapsed" % (i, n[i], utils.minelapsed(start)))
+
+        #print(results_df.loc[i])
+        print("Completed comparisons for Event %d with %d valid articles, %.2fm elapsed" % (i, len(valid_inds), utils.minelapsed(start)))
         i = i - 1
 
+    # Take random sample of non-event articles 
+    n = 10000
+    sample = random.sample(list(article_df.loc[np.isnan(article_df["event"]), "id"]), n)
+    article_dict = comparer.dict_by_ids(article_df, sample, para_sep, parser)
+
+    article_df.loc[sample, "invalid"] = [article_df.loc[article_df["id"] == i, "doc"].iloc[0].invalid for i in sample]
+    valid_inds = [i for i in sample if article_df.loc[i, "invalid"] == 0]
+    article_dict_valid = {k: article_dict[k] for k in valid_inds}
+
+    sim_mat = comparer.run(article_dict_valid)
+    dd.cluster_articles(sim_mat)
+    results_df.loc[len(events), "event"] = np.sum(np.isnan(article_df["event"]))
+    results_df.loc[len(events), "n"] = n
+    results_df.loc[len(events), "n_valid"] = len(valid_inds)
+    for thresh in range(10, 100, 5):
+        results_df.loc[len(events), f"unique{thresh}"] = dd.prop_unique_clusters(thresh_same_doc = thresh)
+
     results_df.to_csv(results_folder, index = False)
+
+# Takes 6.5m to parse 10,000 documents
+# Of those, say about 5279 are "invalid"
+# Takes to finish pairwise comparisons with all of those documents.

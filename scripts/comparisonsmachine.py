@@ -19,7 +19,7 @@ class DocumentComparer:
 
 	def setThresholds(self, thresh_jaccard = None, thresh_same_sent = None):
 		if thresh_jaccard is not None: # min Jaccard index to be considered a sentence match
-			self.thresh_jaccard = max(thresh_jaccard, 0.001)
+			self.thresh_jaccard = max(thresh_jaccard, 0.0001)
 		if thresh_same_sent is not None: # Jaccard index to be considered a definite match
 			self.thresh_same_sent = thresh_same_sent
 
@@ -103,18 +103,16 @@ class DocumentComparer:
 		return 0 if score == 0 else score/np.sum(np.max(weight_mat, axis = 1 - np.argmin(weight_mat.shape)))
 
 class MultiComparisons():
-	thresh_jaccard = .5
-	thresh_same_sent = .9 
-	thresh_same_doc = .5
-	para_sep = "###"
-	parser = "spacy"
-	comparer = DocumentComparer(thresh_jaccard, thresh_same_sent)
-	pool = None
-	start = time.time()
 
 	def __init__(self):
+		self.thresh_jaccard = .5
+		self.thresh_same_sent = .9
+		self.thresh_same_doc = .5
+		self.para_sep = "###"
+		self.parser = "spacy"
+		self.comparer = DocumentComparer(self.thresh_jaccard, self.thresh_same_sent)
 		self.pool = None
-		pass
+		self.start = time.time()
 
 	def setThresholds(self, thresh_jaccard = None, thresh_same_sent = None, thresh_same_doc = None):
 		if thresh_jaccard is not None:
@@ -125,14 +123,15 @@ class MultiComparisons():
 			self.thresh_same_doc = thresh_same_doc 
 		self.comparer = DocumentComparer(self.thresh_jaccard, self.thresh_same_sent)
 
-	def badTextChecker(self, text):
-		text = text.lower()
-		score = 0 
-		if len(text) < 500:
-			score = score + 0.5
-		if len(text) < 1000 and utils.keywordsin(text):
-			score = score + 1
-		return score
+	'''
+	def badTextChecker(self, doc):
+		text = str(doc).lower()
+		nchar = len(text)
+		penalty = 0.5 * (nchar< 500)
+		penalty += 1 * (len([1 for sent in doc.sentences if utils.keywordsin(sent)]) > len(doc.sentences)/2)
+		entities = [ent for ent in utils.flatten(doc.sent_entities) if ent is not None]
+		penalty += 2 * (len(entities) < 1)
+		return penalty
 
 	def filter_articles(self, df, ids = None):
 		self.start = time.time()
@@ -141,7 +140,7 @@ class MultiComparisons():
 			ids = [i for i in range(len(df))]
 		ndocs = len(ids)
 		# MULTIPROCESSING:create and distribute asynchronous tasks to analyze documents
-		tasks = [df.loc[df["id"] == i, "text"].iloc[0] for i in ids]
+		tasks = [df.loc[df["id"] == i, "doc"].iloc[0] for i in ids]
 		if self.pool is None:
 			pool = mp.Pool(processes = min(mp.cpu_count() - 2, round(ndocs/50 + 1)))
 		else:
@@ -153,6 +152,7 @@ class MultiComparisons():
 		print("Checked article text validity via multiprocessing, %.2fm elapsed" % (utils.minelapsed(self.start)))
 		self.pool = pool
 		return docs 
+	'''
 
 	def worker(self, docs):
 		doc1 = docs[0]
@@ -165,13 +165,13 @@ class MultiComparisons():
 		return 0
 
 	def similarity_mat(self, docs, progress = True, ordered = False):
+		self.start = time.time()
 		docids = [i for i in docs.keys()]
 		if ordered:
 			docids = np.sort(docids)
 		ndocs = len(docids)
 		score_mat = np.zeros((ndocs, ndocs)) # Initialize score matrix 
 		# MULTIPROCESSING: create and distribute asynchronous document pair comparison tasks
-		#tasks = utils.flatten([[[docs[docids[i]], docs[docids[j]]] for j in range(i + 1, ndocs)] for i in range(ndocs)])
 		tasks = [[docs[docids[i]], docs[docids[j]]] for i in range(ndocs) for j in range(i + 1, ndocs)]
 		if self.pool is None:
 			pool = mp.Pool(processes = min(mp.cpu_count() - 2, round(ndocs/50 + 1)))
@@ -200,7 +200,7 @@ class MultiComparisons():
 		self.start = time.time()
 		ndocs = len(ids)
 		# Update document parsing parameters as necessary 
-		if self.para_sep is not None:
+		if para_sep is not None:
 			self.para_sep = para_sep
 		if parser is not None:
 			self.parser = parser 
@@ -221,7 +221,6 @@ class MultiComparisons():
 		return docs
 
 	def run(self, docs, progress = True):
-		self.start = time.time()
 		return self.similarity_mat(docs = docs, progress = progress)
 		if self.pool is not None:
 			self.pool.close()
