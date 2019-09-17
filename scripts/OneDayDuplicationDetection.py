@@ -69,7 +69,7 @@ if __name__=='__main__':
         sim_mat = comparer.run(article_dict_valid)
         dd.cluster_articles(sim_mat)
         for thresh in range(10, 100, 5):
-            results_df.loc[i, f"unique{thresh}"] = dd.prop_unique_clusters(thresh_same_doc = thresh)
+            results_df.loc[i, f"unique{thresh}"] = dd.prop_unique_clusters(thresh_same_doc = thresh/100)
 
         results_df.loc[i, "n_valid"] = len(valid_inds)
 
@@ -100,7 +100,7 @@ if __name__=='__main__':
     results_df.loc[len(events), "n"] = n
     results_df.loc[len(events), "n_valid"] = len(valid_inds)
     for thresh in range(10, 100, 5):
-        results_df.loc[len(events), f"unique{thresh}"] = dd.prop_unique_clusters(thresh_same_doc = thresh)
+        results_df.loc[len(events), f"unique{thresh}"] = dd.prop_unique_clusters(thresh_same_doc = thresh/100)
 
     results_df.to_csv(results_folder, index = False)
 

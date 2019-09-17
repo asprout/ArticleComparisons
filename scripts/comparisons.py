@@ -4,8 +4,8 @@ from scipy.spatial.distance import squareform
 import numpy as np 
 import time
 # Article comparisons modules
-from . import utils 
-from . import documents
+import utils 
+import documents
 
 class DocumentComparisons:
     # A class to make pairwise document similarity comparisons 
@@ -206,7 +206,7 @@ class DuplicationDetection(DocumentComparisons):
         self.clusters = None # list of clusters, indexed by document
         self.hclust = None # hierarchical agglo. clustering object
 
-    def dict_by_ids(self, df, ids, para_sep = "###", parser = None):
+    def dict_by_ids(self, df, ids, para_sep = "###", parser = "spacy"):
         """ Given a dataframe of articles and a list of article ids, 
         returns a dictionary with ids as keys and Documents as items, 
         computing and storing the Documents back in the df as needed

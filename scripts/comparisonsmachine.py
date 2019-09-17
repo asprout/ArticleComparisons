@@ -4,9 +4,9 @@ import pandas as pd
 import time
 import os
 # Article comparisons modules 
-from . import utils # helper functions 
-from . import documents # document loading classes
-from . import comparisons # serial processing classes
+import utils # helper functions 
+import documents # document loading classes
+import comparisons # serial processing classes
 
 class DocumentComparer:
 	"""
@@ -187,7 +187,7 @@ class MultiComparisons():
 		# Fill in rest of score matrix with upper triangle of results 
 		score_mat = score_mat + score_mat.transpose()
 		np.fill_diagonal(score_mat, 1.0)
-		print("Finished document comparisons via multiprocessing, %.2fm elapsed" % (utils.minelapsed(self.start)))
+		print("Finished document comparisons via multiprocessing, %.2fm elapsed\n" % (utils.minelapsed(self.start)))
 		self.pool = pool
 		return score_mat 
 
