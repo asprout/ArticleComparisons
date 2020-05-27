@@ -36,9 +36,18 @@ class Survey:
 			M[i, cols] = 1
 		return M
 
-	def get_hit_list(self, assignment_matrix = None, start_task_index = 0, perm_tasks1 = [], perm_tasks2 = [], sample_tasks = [], sample_n = 0, taskconditions = None):
+	def get_hit_list(self, perm_tasks, start_task_index):
+		assignment_matrix = self.get_assignment_matrix(self.assignments_per_task, self.tasks_per_assignment, self.ntasks)
+		[nrow, ncol] = assignment_matrix.shape
+		tasks_list = [np.where(assignment_matrix[i, ] > 0)[0] for i in range(nrow)]
+		perm_tasks = " ".join(str(t) for t in perm_tasks)
+		hit_list = [HIT(i, perm_tasks + " " + " ".join(str(start_task_index + task) for task in tasks_list[i])) for i in range(nrow)]
+		return(hit_list)
+
+	def get_hit_list_2(self, assignment_matrix = None, start_task_index = 0, perm_tasks1 = [], perm_tasks2 = [], sample_tasks = [], sample_n = 0, taskconditions = None):
 		if assignment_matrix is None:
 			assignment_matrix = self.get_assignment_matrix(self.assignments_per_task, self.tasks_per_assignment, self.ntasks)
+		
 		[nrow, ncol] = assignment_matrix.shape
 		tasks_list = [np.where(assignment_matrix[i, ] > 0)[0] for i in range(nrow)]
 		perm_tasks1 = " ".join(str(t) for t in perm_tasks1)
@@ -229,7 +238,7 @@ if __name__ == '__main__':
 	XMLdoc = XMLdoc(modules = [module_intro, module_example] + modlist_screen + [module_pass_screen] + [module_label],
 					tasks = tasklist_instructions + tasklist_screen + tasklist_pass_screen + tasklist_label, 
 					hits = Survey(ntasks, assignments_per_task, 
-								tasks_per_assignment).get_hit_list(start_task_index = 100, 
+								tasks_per_assignment).get_hit_list2(start_task_index = 100, 
 								perm_tasks1 = [t for t in range(len(examples_list) + 1)],
 								perm_tasks2 = [len(examples_list) + screening_csv.shape[0] + 1], 
 								sample_tasks = [t for t in range(len(examples_list) + 1, len(examples_list) + screening_csv.shape[0] + 1)], 

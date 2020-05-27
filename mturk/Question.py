@@ -15,7 +15,7 @@ class Question:
 				 options = None, condition = None, bonus = None, helptext = None):
 		self.q_dict = None 
 		self.varname = varname # used when recording responses 
-		# valuetypes = ['numeric', text', 'categorical']
+		# valuetypes = ['numeric', 'text', 'categorical']
 		self.valuetype = valuetype # determines how question is rendered 
 		self.questiontext = questiontext 
 		self.categories = categories
@@ -34,7 +34,7 @@ class Question:
 					   "valuetype": self.valuetype}
 
 		if self.options is not None:
-			self.q_dict["options"] = self.options 
+			self.q_dict["options"] = self.options.to_dict()
 
 		if self.condition is not None:
 			self.q_dict["condition"] = "<![CDATA[" + self.condition + "]]>"
@@ -72,22 +72,20 @@ class Category:
 		
 
 class Options:
-	""" Note: unlike other classes, this returns a list of dicts, not a single dict 
-	"""
 	def __init__(self, layout = "horizontal", lowLabel = None, highLabel = None,
 				 outsideCategories = None):
-		self.options_list = None
+		self.options_dict = None
 		self.layout = layout
 		self.lowLabel = lowLabel
 		self.highLabel = highLabel
 		self.outsideCategories = outsideCategories
 
-	def to_list(self):
-		self.options_list = [{"layout": self.layout}]
+	def to_dict(self):
+		self.options_dict = {"layout": self.layout}
 		if self.lowLabel is not None:
-			self.options_list.append({"lowLabel": self.lowLabel})
+			self.options_dict["lowLabel"] = self.lowLabel
 		if self.highLabel is not None:
-			self.options_list.append({"highLabel": self.highLabel})
+			self.options_dict["highLabel"] = self.highLabel
 		if self.outsideCategories is not None:
-			self.options_list.extend([{"outsideCategories": oc} for oc in self.outsideCategories])
-		return self.options_list
+			self.options_dict["outsideCategories"] = self.outsideCategories 
+		return self.options_dict

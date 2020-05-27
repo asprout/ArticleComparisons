@@ -123,8 +123,12 @@ class Task:
 
 	def to_dict(self):
 		self.task_dict = {"content": self.content, 
-						  "taskid": self.taskid, 
-						  "modules": self.modules.name}
+						  "taskid": self.taskid}
+
+		if type(self.modules) is list:
+			self.task_dict["modules"] = " ".join(mod.name for mod in self.modules)
+		else: 
+			self.task_dict["modules"] = self.modules.name
 		return self.task_dict 
 
 class Document:
