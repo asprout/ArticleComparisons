@@ -7,7 +7,6 @@ import nltk # tokenize words and sentences based on language
 # For spacy:
 NLP = spacy.load("en_core_web_md", disable = ['tagger'])
 # May need to run: python -m spacy download en_core_web_md (or sm for small)
-
 import utils
 
 class Document:

@@ -12,17 +12,18 @@ import comparisonsmachine
 
 if __name__=='__main__':
     start = time.time()
+    date = "20180715"
+    if len(sys.argv) > 1:
+        date = sys.argv[1]
+
     data_folder = "data"
-    results_folder = os.path.join("..", "results")
+    results_folder = os.path.join("..", "results", date)
+
     para_sep = "###"
     parser = "spacy"
     thresh_jaccard = .5
     thresh_same_sent = .9
     thresh_same_doc = .75
-
-    date = "20180715"
-    if len(sys.argv) > 1:
-        date = sys.argv[1]
 
     article_df_path = os.path.join("..", data_folder, "article_df_" + date)
     try:
@@ -37,7 +38,9 @@ if __name__=='__main__':
     try:
         results_df = pd.read_csv(os.path.join(results_folder, "results_" + date + "_clusters_temp.csv"))
     except:
-        results_df = pd.DataFrame(columns = ["event", "n", "n_valid"] + [f"unique{thresh}" for thresh in range(10, 100, 5)])
+        if not os.path.exists(results_folder):
+            os.mkdir(results_folder)
+        results_df = pd.DataFrame(columns = ["event", "n", "n_valid"] + [f"unique{thresh}" for thresh in range(5, 100, 5)])
         results_df["event"] = events
         results_df["n"] = n
 
@@ -67,9 +70,17 @@ if __name__=='__main__':
         article_dict_valid = {k: article_dict[k] for k in valid_inds}
 
         sim_mat = comparer.run(article_dict_valid)
+
+        np.save(os.path.join(results_folder, f"{i}_similarities.npy"), sim_mat)
+
         dd.cluster_articles(sim_mat)
-        for thresh in range(10, 100, 5):
+        threshs = range(5, 100, 5)
+        for thresh in threshs:
             results_df.loc[i, f"unique{thresh}"] = dd.prop_unique_clusters(thresh_same_doc = thresh/100)
+
+        plt.figure()
+        plt.plot(threshs, list(results_df.iloc[i, 3:3+len(threshs)]))
+        plt.savefig(os.path.join(results_folder, f"{i}.png"))
 
         results_df.loc[i, "n_valid"] = len(valid_inds)
 

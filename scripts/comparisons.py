@@ -236,11 +236,16 @@ class DuplicationDetection(DocumentComparisons):
 
         for i, doc1id in enumerate(docids):
             for j in range(i + 1, ndocs):
+                if sim_mat[i, j] != 0:
+                    continue
                 doc1 = docs[doc1id]
                 doc2 = docs[docids[j]]
                 if utils.cosinesim(doc1.vec, doc2.vec) >= 0.8:
                     if not self.entities or 0 < abs(self.jaccard_index(utils.flatten(doc1.sent_entities), utils.flatten(doc2.sent_entities), union_subset = True)):
                         sim_mat[i, j] = self.jaccard_score(doc1, doc2)
+            duplicates = np.where(sim_mat[i, :] == 1)[0]
+            for dupe in duplicates: # don't do unnecessary computing for identical articles
+                sim_mat[dupe, dupe + 1:] = sim_mat[i, dupe + 1:]
             if progress and round(i % 100) == 0:
                 print("%d of %d rows completed, %.2fm elapsed" % (i, len(docs), utils.minelapsed(start)))
         sim_mat = sim_mat + sim_mat.transpose()
@@ -284,7 +289,7 @@ class DuplicationDetection(DocumentComparisons):
         if thresh_same_doc is not None:
             self.thresh_same_doc = thresh_same_doc
         self.clusters = utils.flatten(hierarchy.cut_tree(hclust, height = 1 - self.thresh_same_doc))
-        return self.clusters
+        return np.array(self.clusters)
 
     def prop_unique_clusters(self, thresh_same_doc = None, subset = None):
         clusters = self.get_cluster_assignments(thresh_same_doc = thresh_same_doc)
